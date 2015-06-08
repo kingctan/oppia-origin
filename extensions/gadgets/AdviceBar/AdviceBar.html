@@ -5,8 +5,8 @@
   <div class="oppia-advice-bar-container">
     <h2 class="oppia-advice-bar-title"><[adviceBarTitle]></h2>
     <div ng-repeat="resource in adviceBarResources track by $index">
-      <div class="oppia-advice-resource">
-        <div class="oppia-advice-resource-image" ng-click="overlayAdviceModal($index)"></div>
+      <div class="oppia-advice-resource" ng-click="overlayAdviceModal($index)">
+        <div class="oppia-advice-resource-image"></div>
         <[resource.adviceTitle]>
       </div>
     </div>

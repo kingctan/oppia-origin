@@ -21,98 +21,116 @@
 // TODO(vjoisar): desc for the gadget ui editor
 oppia.controller('GadgetEditor', [
   '$scope', '$http', '$rootScope', '$modal', '$filter', 'editorContextService',
-  'gadgetNameService', 'gadgetCustomizationArgsService', 'gadgetLayoutService', 
-  'gadgetStateVisibilityService', 'extensionTagAssemblerService', 
-  'explorationGadgetsService', 'GADGET_SPECS',
+  'oppiaHtmlEscaper', 'explorationGadgetsService', 
+  'extensionTagAssemblerService', 'GADGET_SPECS',
   function($scope, $http, $rootScope, $modal, $filter, editorContextService,
-    gadgetNameService, gadgetCustomizationArgsService, gadgetLayoutService, 
-    gadgetStateVisibilityService, extensionTagAssemblerService, 
-    explorationGadgetsService, GADGET_SPECS) {
-    var _gadgetPreviewHtml = function(gadgetData){
-        console.log(gadgetData);
-      var el = $(
-        '<oppia-gadget-' + $filter('camelCaseToHyphens')(gadgetData.gadget_id) + '>');
-      el = extensionTagAssemblerService.formatCustomizationArgAttributesForElement(
-        el, gadgetData.customization_args);
-      return el.get(0).outerHTML;
-    };
-    $scope.$on('gadgetsInitialized', function(evt) {
+    oppiaHtmlEscaper, explorationGadgetsService,
+    extensionTagAssemblerService, GADGET_SPECS) {
+
+    $scope.$on('gadgetsChangedOrInitialized', function(evt) {
+      $scope.getAllGadgetsInfo();
+    });
+    $scope.getAllGadgetsInfo = function(){
       $scope.gadgets = explorationGadgetsService.getGadgets();
       $scope.panels = explorationGadgetsService.getPanels();
-      $scope.gadgetPreviewHtml = '';
-      for (var gadgetName in $scope.gadgets){
-        $scope.gadgetPreviewHtml += _gadgetPreviewHtml($scope.gadgets[gadgetName]);
-      }
-    });
-
-    $scope.openAddGadgetModal = function(isEditing) {
+      console.log($scope.gadgets);
+    };
+    $scope.openGadgetModal = function(gadgetEditData, panelName) {
       $modal.open({
         templateUrl: 'modals/addGadget',
         // Clicking outside this modal should not dismiss it.
         backdrop: 'static',
-        resolve: {},
+        resolve: {
+          gadgetEditData: function() {
+            return gadgetEditData;
+          },
+          panelName: function() {
+            return panelName;
+          }
+        },
         controller: [
           '$scope', '$modalInstance', 'explorationStatesService', 
-          'editorContextService', 'explorationGadgetsService', 
-          'gadgetNameService', 'gadgetCustomizationArgsService', 
-          'gadgetLayoutService',  'gadgetStateVisibilityService','GADGET_SPECS',
+          'editorContextService', 'explorationGadgetsService', 'gadgetEditData',
+          'panelName', 'GADGET_SPECS',
           function($scope, $modalInstance, explorationStatesService, 
-            editorContextService, explorationGadgetsService, gadgetNameService,
-            gadgetCustomizationArgsService, gadgetLayoutService, 
-            gadgetStateVisibilityService, GADGET_SPECS) {
+            editorContextService, explorationGadgetsService, gadgetEditData, 
+            panelName, GADGET_SPECS) {
 
         $scope.ALLOWED_GADGETS = GLOBALS.ALLOWED_GADGETS;
         $scope.GADGET_SPECS = GADGET_SPECS;
 
-        $scope.gadgetNameService = gadgetNameService;
-        $scope.gadgetCustomizationArgsService = gadgetCustomizationArgsService;
-        $scope.gadgetLayoutService = gadgetLayoutService;
-        $scope.gadgetStateVisibilityService = gadgetStateVisibilityService;
-
-        $scope.explorationStates = Object.keys(explorationStatesService.getStates());
-
-        $scope.onChangeGadgetId = function(newGadgetId) {
-          $scope.selectedGadgetId = newGadgetId;
-          gadgetNameService.displayed = (
-            explorationGadgetsService.getUniqueGadgetName(newGadgetId)
-          );
-          gadgetStateVisibilityService.displayed = 
-              [editorContextService.getActiveStateName()];
-          var gadgetSpec = GADGET_SPECS[newGadgetId];
+        var _loadSchemaForm = function(gadgetId) {
+          var gadgetSpec = GADGET_SPECS[gadgetId];
           $scope.customizationArgSpecs = gadgetSpec.customization_arg_specs;
-          gadgetCustomizationArgsService.displayed = {};
           for (var i = 0; i < $scope.customizationArgSpecs.length; i++) {
               var argName = $scope.customizationArgSpecs[i].name;
-            gadgetCustomizationArgsService.displayed[argName] = {
-              value: angular.copy(
-                $scope.customizationArgSpecs[i].default_value
+            $scope.gadgetData.customizationArgs[argName] = {
+              value: ($scope.gadgetData.customizationArgs.hasOwnProperty(argName)?
+                angular.copy($scope.gadgetData.customizationArgs[argName].value):
+                angular.copy($scope.customizationArgSpecs[i].default_value)
               )
             };
           }
           $scope.$broadcast('schemaBasedFormsShown');
           $scope.form = {};
+        }
+        $scope.editingGadget = false;
+        //Initialising gadgetDict
+        $scope.gadgetData = {
+          gadgetId: '',
+          gadgetName: '',
+          position: 'left',
+          customizationArgs: {},
+          visibleInStates: []
         };
+        if(gadgetEditData){
+          if(!panelName) {
+            console.error('panelName required to make the changes.')
+            return;
+          }
+          $scope.editingGadget = true;
+          $scope.gadgetData = {
+            gadgetId: gadgetEditData.gadget_id,
+            gadgetName: gadgetEditData.gadget_name,
+            position: panelName,
+            customizationArgs: gadgetEditData.customization_args,
+            visibleInStates: gadgetEditData.visible_in_states
+          };
+          _loadSchemaForm(gadgetEditData.gadget_id);
+        }
 
-        $scope.setTargetPanel = function (panelName) {
-          gadgetLayoutService.displayed = panelName;
+        $scope.explorationStates = 
+          Object.keys(explorationStatesService.getStates());
+
+        $scope.onChangeGadgetId = function(newGadgetId) {
+          $scope.gadgetData.gadgetId = newGadgetId;
+          $scope.gadgetData.gadgetName = (
+            explorationGadgetsService.getUniqueGadgetName(newGadgetId)
+          );
+          $scope.gadgetData.visibleInStates= 
+              [editorContextService.getActiveStateName()];
+          _loadSchemaForm(newGadgetId);
         };
 
         $scope.manageVisibilityInStates = function (stateName) {
-          var index = gadgetStateVisibilityService.displayed.indexOf(stateName);
+          var index = $scope.gadgetData.visibleInStates.indexOf(stateName);
           // is currently selected
           if (index > -1) {
-            gadgetStateVisibilityService.displayed.splice(index, 1);
+            $scope.gadgetData.visibleInStates.splice(index, 1);
           }
           // is newly selected
           else {
-            gadgetStateVisibilityService.displayed.push(stateName);
+            $scope.gadgetData.visibleInStates.push(stateName);
           }
         };
         $scope.returnToGadgetSelector = function() {
-          gadgetNameService.displayed = null;
-          gadgetCustomizationArgsService.displayed = {};
-          gadgetLayoutService.displayed = null;
-          gadgetStateVisibilityService.displayed = [];
+          $scope.gadgetData = {
+            gadgetId: '',
+            gadgetName: '',
+            position: '',
+            customizationArgs: {},
+            visibleInStates: []
+          };
         };
         $scope.cancel = function() {
           $modalInstance.dismiss('cancel');
@@ -120,30 +138,68 @@ oppia.controller('GadgetEditor', [
         $scope.addGadget = function() {
           //TODO(vjoisar):Add Validation if any field is empty to warn user 
           //  before saving or closing the dialog;
-          $modalInstance.close($scope.selectedGadgetId);
+          var retrnObj = {
+            mode: "addingGadget",
+            data: $scope.gadgetData
+          }
+          $modalInstance.close(retrnObj);
+        };
+        $scope.updateGadget = function() {
+          //TODO(vjoisar):Add Validation if any field is empty to warn user 
+          //  before saving or closing the dialog;
+          var retrnObj = {
+            mode: "editingGadget",
+            data: $scope.gadgetData
+          }
+          $modalInstance.close(retrnObj);
         };
         }]
-      }).result.then(function(gadgetId){
-        gadgetNameService.saveDisplayedValue();
-        gadgetCustomizationArgsService.saveDisplayedValue();
-        gadgetLayoutService.saveDisplayedValue();
-        gadgetStateVisibilityService.saveDisplayedValue();
-        _saveNewGadget(gadgetId);
+      }).result.then(function(retrnObj){
+        var gadgetData = retrnObj.data;
+        //return
+        if(retrnObj.mode == 'editingGadget') {
+          $scope.editGadget(gadgetData);
+        }
+        else if(retrnObj.mode == 'addingGadget') {
+          $scope.saveNewGadget(gadgetData);
+        }
+        else {
+          console.warn("unhandled gadget mode...");
+        }
       }, function() {
         console.log('Gadget modal closed');
       });
     };
 
-    $scope.deleteGadget = function(gadgetId) {
-      explorationGadgetsService.deleteGadget(gadgetId);
-    }
-    var _saveNewGadget = function(gadgetId) {
-      gadgetDict = {
-        gadgetId: gadgetId,
-        name: gadgetNameService.savedMemento,
-        customizationArgs: gadgetCustomizationArgsService.savedMemento,
-         visibleInStates: gadgetStateVisibilityService.savedMemento
-      };
-      explorationGadgetsService.addGadget(gadgetDict, gadgetLayoutService.savedMemento);
-    }
+    $scope.deleteGadget = function(gadgetName) {
+      explorationGadgetsService.deleteGadget(gadgetName);
+    };
+
+    $scope.editGadget = function(newGadgetData) {
+      explorationGadgetsService.updateGadget(newGadgetData);
+    };
+
+    $scope.renameGadget = function(newGadgetName) {
+      //@sll:- Scoping issues for $scope.newGadgetName
+      $scope.newGadgetName = newGadgetName;
+      //Normalize the new gadget name...
+      if(!($scope.oldGadgetName && $scope.newGadgetName)) {
+        console.log("Data missing to rename gadget. OldName: " +
+          $scope.oldGadgetName + " New name: " + $scope.newGadgetName);
+      }
+      else if($scope.oldGadgetName != $scope.newGadgetName) {
+        explorationGadgetsService.renameGadget($scope.oldGadgetName, 
+                                               $scope.newGadgetName);
+      }
+      $scope.oldGadgetName = '';
+      $scope.newGadgetName = '';
+    };
+
+    $scope.initAndShowGadgetEditor = function(currentGadgetName) {
+      $scope.oldGadgetName = currentGadgetName;
+      $scope.newGadgetName = currentGadgetName;
+    };
+    $scope.saveNewGadget = function(gadgetData) {
+      explorationGadgetsService.addGadget(gadgetData, gadgetData.position);
+    };
 }]);

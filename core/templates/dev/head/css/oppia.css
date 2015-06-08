@@ -1920,13 +1920,84 @@ div#ng-curtain {
 .oppia-gadget-tile:hover {
   border: 2px solid #05A69A;
 }
-.conversation-skin-left-gadget-panel {
-  background: white;
-  border: 1px solid lightgrey;
-  max-height: 400px;
-  left: 0;
-  margin-left: 50px;
+
+.oppia-right-editor-gadget-panel,
+.oppia-left-editor-gadget-panel,
+.oppia-bottom-editor-gadget-panel{
+  background: #636363;
   position: fixed;
   top: 100px;
-  max-width: 200px;
+  width: 140px; 
+  color: #fff;
+}
+
+.oppia-bottom-editor-gadget-panel{
+  margin-bottom: 5%;
+  top: auto;
+  bottom: 0;
+  left: 50%;
+  max-height: 100px;
+}
+
+.oppia-right-editor-gadget-panel{
+  margin-right: 30%;
+  right: 0;
+}
+
+.oppia-left-editor-gadget-panel{
+  margin-left: 5%;
+  left: 0;
+}
+
+.oppia-gadget-delete-icon,
+.oppia-gadget-edit-icon,
+.oppia-gadget-rename-icon {
+  cursor: pointer;
+  float: right;
+  width: 20px;
+}
+
+.oppia-gadget-delete-icon,
+.oppia-gadget-rename-icon {
+  top: 4px;
+}
+
+.oppia-gadget-edit-icon {  
+  right: 0;
+  color: #636363;
+  position: absolute;
+  top: 80%;
+}
+.oppia-gadget-content{
+  background: #fff;  
+}
+
+.oppia-gadget-name {
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: small;
+  height: 25px;
+}
+
+.oppia-gadget-hidden{
+  border: 1px dotted #fff;
+}
+.oppia-gadget-hidden .oppia-gadget-name{
+  opacity: 0.5;
+}
+.oppia-gadget-hidden .oppia-gadget-content{
+  display: none;
+}
+
+.oppia-rename-gadget-form {
+  position: absolute;
+  width: 230px;
+  color: initial;
+}
+
+.oppia-gadget-preview-container {
+  cursor: pointer;
+}
 }

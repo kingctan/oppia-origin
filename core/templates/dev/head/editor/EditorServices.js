@@ -206,8 +206,8 @@ oppia.factory('changeListService', [
   };
 
   var ALLOWED_GADGET_BACKEND_NAMES = {
-    'gadget_visibility': true,
-    'gadget_customization_args': true
+    'visible_in_states': true,
+    'customization_args': true
   }
 
   // Private Methods
@@ -343,18 +343,10 @@ oppia.factory('changeListService', [
      * @param {string} panelName The panel where the gadget is being added.
      */
     addGadget: function(gadgetData, panelName) {
-      console.log(gadgetData);
-
-      // Convert to backend property names.
-      var backendDict = {};
-      backendDict.gadget_id = gadgetData.gadgetId;
-      backendDict.visible_in_states = gadgetData.visibleInStates;
-      backendDict.gadget_name = gadgetData.name;
-      backendDict.customization_args = (gadgetData.customizationArgs);
 
       this._addChange({
         cmd: CMD_ADD_GADGET,
-        gadget_dict: backendDict,
+        gadget_dict: gadgetData,
         panel_name: panelName
       });
     },
@@ -910,6 +902,26 @@ oppia.factory('statePropertyService', [
   };
 }]);
 
+// A data service that stores the current interaction id.
+// TODO(sll): Add validation.
+oppia.factory('stateInteractionIdService', [
+    'statePropertyService', function(statePropertyService) {
+  var child = Object.create(statePropertyService);
+  child.propertyName = 'widget_id';
+  return child;
+}]);
+
+// A data service that stores the current state customization args for the
+// interaction. This is a dict mapping customization arg names to dicts of the
+// form {value: customization_arg_value}.
+// TODO(sll): Add validation.
+oppia.factory('stateCustomizationArgsService', [
+    'statePropertyService', function(statePropertyService) {
+  var child = Object.create(statePropertyService);
+  child.propertyName = 'widget_customization_args';
+  return child;
+}]);
+
 // Data service for keeping track of gadget data and location across panels.
 oppia.factory('explorationGadgetsService', [
     '$log', '$modal', '$filter', '$location', '$rootScope',
@@ -958,6 +970,7 @@ oppia.factory('explorationGadgetsService', [
       }
       return false;
     }
+    return true;
     return (
       // TODO(anuzis/vjoisar): implement validatorsService.isValidGadgetName
       validatorsService.isValidGadgetName(newGadgetName, showWarnings));
@@ -1002,6 +1015,18 @@ oppia.factory('explorationGadgetsService', [
     return true;
   };
 
+  var _changeToBackendCompatibleDict = function(gadgetData) {
+      console.log(gadgetData);
+
+      // Convert to backend property names.
+      var backendDict = {};
+      backendDict.gadget_id = gadgetData.gadgetId;
+      backendDict.visible_in_states = gadgetData.visibleInStates;
+      backendDict.gadget_name = gadgetData.gadgetName;
+      backendDict.customization_args = (gadgetData.customizationArgs);
+      return backendDict;
+  }
+
   return {
     init: function(skin_customizations_data) {
       // Data structure initialization.
@@ -1011,7 +1036,7 @@ oppia.factory('explorationGadgetsService', [
 
       $log.info('Initializing ' + Object.keys(_gadgets).length + ' gadget(s).');
       $log.info('Initializing ' + Object.keys(_panels).length + ' panel(s).');
-      $rootScope.$broadcast('gadgetsInitialized');
+      $rootScope.$broadcast('gadgetsChangedOrInitialized');
     },
     getUniqueGadgetName: function(gadgetId) {
       return _generateUniqueGadgetName(gadgetId);
@@ -1036,7 +1061,9 @@ oppia.factory('explorationGadgetsService', [
      * @param {object} newGadgetData Updated data for the gadget.
      */
     updateGadget: function(newGadgetData) {
-      var gadgetName = newGadgetData.name;
+      var panelName = newGadgetData.position;
+      newGadgetData = _changeToBackendCompatibleDict(newGadgetData);
+      var gadgetName = newGadgetData.gadget_name;
 
       if (!_gadgets.hasOwnProperty[gadgetName]) {
         $log.info('Attempted to update a non-existent gadget: ' + gadgetName);
@@ -1045,40 +1072,48 @@ oppia.factory('explorationGadgetsService', [
       var currentGadgetData = _gadgets[gadgetName];
 
       // TODO(anuzis/vjoisar): Karma tests. Needs to detect deep inequality.
-      if (currentGadgetData.customizationArgs !=
-          newGadgetData.customizationArgs) {
+      if (currentGadgetData.customization_args !=
+          newGadgetData.customization_args) {
         $log.info('Updating customization args for gadget: ' + gadgetName);
         changeListService.editGadgetProperty(
           gadgetName,
           'customization_args',
-          newGadgetData.customizationArgs,
-          currentGadgetData.customizationArgs
+          newGadgetData.customization_args,
+          currentGadgetData.customization_args
         );
       }
-      if (currentGadgetData.visibleInStates !=
-          newGadgetData.visibleInStates) {
+      if (currentGadgetData.visible_in_states !=
+          newGadgetData.visible_in_states) {
         $log.info('Updating visibility for gadget: ' + gadgetName);
         changeListService.editGadgetProperty(
           gadgetName,
           'visible_in_states',
-          newGadgetData.visibleInStates,
-          currentGadgetData.visibleInStates
+          newGadgetData.visible_in_states,
+          currentGadgetData.visible_in_states
         );
       }
       _gadgets[gadgetName] = angular.copy(newGadgetData);
+      $rootScope.$broadcast('gadgetsChangedOrInitialized');
     },
     addGadget: function(gadgetData, panelName) {
+
       if(!_panels[panelName]) {
         $log.info('Attempted to add to non-existent panel: ' + panelName);
         return;
       }
-      //TODO(anuzis/vjoisar): Normalize gadget name to remove whitespace.
-      if(!!_gadgets.hasOwnProperty(gadgetData.name)){
+
+      gadgetData = _changeToBackendCompatibleDict(gadgetData);
+
+      if(!!_gadgets.hasOwnProperty(gadgetData.gadget_name)){
         $log.info('Gadget with this name already exists.');
         return;
       }
-      _gadgets[gadgetData.name] = gadgetData;
-      _panels[panelName].push(gadgetData.name);
+      /*
+        To avoid mismatched dict keys in _gadgets
+      */      
+      _gadgets[gadgetData.gadget_name] = gadgetData;
+      _panels[panelName].push(gadgetData.gadget_name);
+      $rootScope.$broadcast('gadgetsChangedOrInitialized');
       changeListService.addGadget(gadgetData, panelName);
     },
     deleteGadget: function(deleteGadgetName) {
@@ -1126,13 +1161,15 @@ oppia.factory('explorationGadgetsService', [
         var gadgetIndex = _panels[hostPanel].indexOf(deleteGadgetName);
         _panels[hostPanel].splice(gadgetIndex, 1);
 
+        $rootScope.$broadcast('gadgetsChangedOrInitialized');
         // Update changeListService
         changeListService.deleteGadget(deleteGadgetName);
       });
     },
     renameGadget: function(oldGadgetName, newGadgetName) {
+      console.log(oldGadgetName + '---' + newGadgetName)
       newGadgetName = $filter('normalizeWhitespace')(newGadgetName);
-      if (!validatorsService.isValidGadgetName(newGadgetName, true)) {
+      if (!_isNewGadgetNameValid(newGadgetName, true)) {
         return;
       }
       if (!!_gadgets.hasOwnProperty(newGadgetName)) {
@@ -1142,13 +1179,16 @@ oppia.factory('explorationGadgetsService', [
       warningsData.clear();
 
       // Update _gadgets
-      _gadgets[newGadgetName] = angular.copy(_gadgets[oldGadgetName]);
+      gadgetData = angular.copy(_gadgets[oldGadgetName]);
+      gadgetData.gadget_name = newGadgetName;
+      _gadgets[newGadgetName] = gadgetData;
       delete _gadgets[oldGadgetName];
 
       // Update _panels
       var hostPanel = _getPanelNameFromGadgetName(oldGadgetName);
       var gadgetIndex = _panels[hostPanel].indexOf(oldGadgetName);
       _panels[hostPanel].splice(gadgetIndex, 1, newGadgetName);
+      $rootScope.$broadcast('gadgetsChangedOrInitialized');
 
       changeListService.renameGadget(oldGadgetName, newGadgetName);
     },
@@ -1183,145 +1223,6 @@ oppia.factory('explorationGadgetsService', [
       return angular.copy(_panels[panelName]);
     }
   };
-}]);
-
-oppia.factory('gadgetPropertyService', [
-    '$log', 'changeListService', 'warningsData', 
-    function($log, changeListService, warningsData) {
-  return {
-    init: function(gadgetName, value, gadgetAccessorDict, gadgetAccessorKey) {
-      if (!gadgetAccessorDict || !gadgetAccessorKey) {
-        throw 'Not enough args passed into stategadgetPropertyService.init().';
-      }
-
-      if (this.propertyName === null) {
-        throw 'Gadget property name cannot be null.';
-      }
-
-      $log.info('Initializing gadget ' + this.propertyName + ':', value);
-
-      // A reference to the gadget dict that should be updated.
-      this.gadgetAccessorDict = gadgetAccessorDict;
-      // The name of the key in gadgetAccessorDict whose value should be updated.
-      this.gadgetAccessorKey = gadgetAccessorKey;
-      // The name of the gadget.
-      this.gadgetName = gadgetName;
-      // The current value of the property (which may not have been saved to the
-      // frontend yet). In general, this will be bound directly to the UI.
-      this.displayed = angular.copy(value);
-      // The previous (saved-in-the-frontend) value of the property. Here, 'saved'
-      // means that this is the latest value of the property as determined by the
-      // frontend change list.
-      this.savedMemento = angular.copy(value);
-    },
-    // Returns whether the current value has changed from the memento.
-    hasChanged: function() {
-      return !angular.equals(this.savedMemento, this.displayed);
-    },
-    // The backend name for this property. THIS MUST BE SPECIFIED BY SUBCLASSES.
-    propertyName: null,
-    // Transforms the given value into a normalized form. THIS CAN BE
-    // OVERRIDDEN BY SUBCLASSES. The default behavior is to do nothing.
-    _normalize: function(value) {
-      return value;
-    },
-    // Validates the given value and returns a boolean stating whether it
-    // is valid or not. THIS CAN BE OVERRIDDEN BY SUBCLASSES. The default
-    // behavior is to always return true.
-    _isValid: function(value) {
-      return true;
-    },
-    // Creates a new entry in the change list, and updates the memento to the
-    // displayed value.
-    saveDisplayedValue: function() {
-      if (this.propertyName === null) {
-        throw 'Gadget property name cannot be null.';
-      }
-
-      this.displayed = this._normalize(this.displayed);
-      if (!this._isValid(this.displayed) || !this.hasChanged()) {
-        this.restoreFromMemento();
-        return;
-      }
-
-      if (angular.equals(this.displayed, this.savedMemento)) {
-        return;
-      }
-
-      warningsData.clear();
-      //changeListService.addGadget();
-      //this.gadgetAccessorDict[this.gadgetAccessorKey] = angular.copy(this.displayed);
-      /*
-      // @sll: I am not sure if I need to call changelist from here as we do that 
-      // in explorationGadgetsService.  and I wasn't sure how gadgetAccessorDict 
-      // used for and have commented them for now. The gadgetPropertyService follow
-      // gadget property service now.
-      */
-      this.savedMemento = angular.copy(this.displayed);
-    },
-    // Reverts the displayed value to the saved memento.
-    restoreFromMemento: function() {
-      this.displayed = angular.copy(this.savedMemento);
-    }
-  };
-}]);
-
-// A data service that stores the current gadget name.
-// TODO(anuzis/vjoisar): Add validation.
-oppia.factory('gadgetNameService', [
-    'gadgetPropertyService', function(gadgetPropertyService) {
-  var child = Object.create(gadgetPropertyService);
-  child.propertyName = 'gadgetName';
-  return child;
-}]);
-
-// A data service that stores the current gadget customization args for the
-// gadget. This is a dict mapping customization arg names to dicts of the
-// form {value: customization_arg_value}.
-// TODO(anuzis/vjoisar): Add validation.
-oppia.factory('gadgetCustomizationArgsService', [
-    'gadgetPropertyService', function(gadgetPropertyService) {
-  var child = Object.create(gadgetPropertyService);
-  child.propertyName = 'gadget_customization_args';
-  return child;
-}]);
-
-// A data service that stores the current gadget location.
-// TODO(anuzis/vjoisar): Add validation.
-oppia.factory('gadgetLayoutService', [
-    'gadgetPropertyService', function(gadgetPropertyService) {
-  var child = Object.create(gadgetPropertyService);
-  child.propertyName = 'panel_name';
-  return child;
-}]);
-
-// A data service that stores the current gadget state visibility list.
-// TODO(anuzis/vjoisar): Add validation.
-oppia.factory('gadgetStateVisibilityService', [
-    'gadgetPropertyService', function(gadgetPropertyService) {
-  var child = Object.create(gadgetPropertyService);
-  child.propertyName = 'gadget_visibility';
-  return child;
-}]);
-
-// A data service that stores the current interaction id.
-// TODO(sll): Add validation.
-oppia.factory('stateInteractionIdService', [
-    'statePropertyService', function(statePropertyService) {
-  var child = Object.create(statePropertyService);
-  child.propertyName = 'widget_id';
-  return child;
-}]);
-
-// A data service that stores the current state customization args for the
-// interaction. This is a dict mapping customization arg names to dicts of the
-// form {value: customization_arg_value}.
-// TODO(sll): Add validation.
-oppia.factory('stateCustomizationArgsService', [
-    'statePropertyService', function(statePropertyService) {
-  var child = Object.create(statePropertyService);
-  child.propertyName = 'widget_customization_args';
-  return child;
 }]);
 
 

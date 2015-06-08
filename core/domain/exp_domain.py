@@ -49,8 +49,8 @@ STATE_PROPERTY_INTERACTION_CUST_ARGS = 'widget_customization_args'
 STATE_PROPERTY_INTERACTION_HANDLERS = 'widget_handlers'
 # @sll: Do we want to expand on this existing pattern? Appears alright to me,
 # but unsure based on backwards compatibility comments above.
-GADGET_PROPERTY_VISIBILITY = 'gadget_visibility'
-GADGET_PROPERTY_CUST_ARGS = 'gadget_customization_args'
+GADGET_PROPERTY_VISIBILITY = 'visible_in_states'
+GADGET_PROPERTY_CUST_ARGS = 'customization_args'
 # Kept for legacy purposes; not used anymore.
 STATE_PROPERTY_INTERACTION_STICKY = 'widget_sticky'
 
@@ -149,7 +149,7 @@ class ExplorationChange(object):
             self.gadget_name = change_dict['gadget_name']
         elif self.cmd == 'edit_gadget_property':
             if change_dict['property_name'] not in self.GADGET_PROPERTIES:
-                raise Exception('Invalid change_dict' % change_dict)
+                raise Exception('Invalid gadget change_dict: %s' % change_dict)
             self.gadget_name = change_dict['gadget_name']
             self.property_name = change_dict['property_name']
             self.new_value = change_dict['new_value']
