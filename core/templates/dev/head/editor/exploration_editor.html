@@ -270,6 +270,32 @@
         <p ng-if="changedStates.length > 0">
           <em>You changed the following states:</em> <strong><[formatStateList(changedStates)]></strong>
         </p>
+
+        <p ng-if="addedGadgets.length > 0">
+          <em>You added the following gadgets</em>: <strong><[formatGadgetList(addedGadgets)]></strong>
+        </p>
+
+        <div ng-if="gadgetChangesExist">
+          <em>
+            You made the following changes to gadgets:
+          </em>
+          <div ng-repeat="(gadgetName, gadgetChanges) in gadgetPropertyChanges">
+            <h5><[gadgetName]></h5>
+            <ul>
+              <li ng-repeat="(propertyName, changeInfo) in gadgetChanges">
+                <[formatGadgetPropertyChange(propertyName, changeInfo)]>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <p ng-if="deletedGadgets.length > 0">
+          <em>You deleted the following gadgets:</em> <strong><[formatGadgetList(deletedGadgets)]></strong>
+        </p>
+
+        <p ng-if="changedGadgets.length > 0">
+          <em>You changed the following gadgets:</em> <strong><[formatGadgetList(changedGadgets)]></strong>
+        </p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-default" ng-click="cancel()">Cancel</button>

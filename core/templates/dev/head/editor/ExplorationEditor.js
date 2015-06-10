@@ -477,14 +477,22 @@ oppia.controller('ExplorationSaveAndPublishButtons', [
       var changedStates = data.summary.changed_states;
       var addedStates = data.summary.added_states;
       var deletedStates = data.summary.deleted_states;
+      var gadgetPropertyChanges = data.summary.gadget_property_changes;
+      var changedGadgets = data.summary.changed_gadgets;
+      var addedGadgets = data.summary.added_gadgets;
+      var deletedGadgets = data.summary.deleted_gadgets;
       var warningMessage = data.warning_message;
 
       var changesExist = (
         !$.isEmptyObject(explorationPropertyChanges) ||
         !$.isEmptyObject(statePropertyChanges) ||
+        !$.isEmptyObject(gadgetPropertyChanges) ||
         changedStates.length > 0 ||
+        changedGadgets.length > 0 ||
         addedStates.length > 0 ||
-        deletedStates.length > 0);
+        addedGadgets.length > 0 ||
+        deletedStates.length > 0 ||
+        deletedGadgets.length > 0);
 
       if (!changesExist) {
         warningsData.addWarning('Your changes cancel each other out, ' +
@@ -520,6 +528,18 @@ oppia.controller('ExplorationSaveAndPublishButtons', [
           deletedStates: function() {
             return deletedStates;
           },
+          gadgetPropertyChanges: function() {
+            return gadgetPropertyChanges;
+          },
+          changedGadgets: function() {
+            return changedGadgets;
+          },
+          addedGadgets: function() {
+            return addedGadgets;
+          },
+          deletedGadgets: function() {
+            return deletedGadgets;
+          },
           isExplorationPrivate: function() {
             return explorationRightsService.isPrivate();
           }
@@ -527,15 +547,21 @@ oppia.controller('ExplorationSaveAndPublishButtons', [
         controller: [
           '$scope', '$modalInstance', 'explorationPropertyChanges',
           'statePropertyChanges', 'changedStates', 'addedStates',
-          'deletedStates', 'isExplorationPrivate',
+          'deletedStates', 'gadgetPropertyChanges', 'changedGadgets',
+          'addedGadgets', 'deletedGadgets', 'isExplorationPrivate',
           function($scope, $modalInstance, explorationPropertyChanges,
                    statePropertyChanges, changedStates, addedStates,
-                   deletedStates, isExplorationPrivate) {
+                   deletedStates, gadgetPropertyChanges, changedGadgets,
+                   addedGadgets, deletedGadgets, isExplorationPrivate) {
             $scope.explorationPropertyChanges = explorationPropertyChanges;
             $scope.statePropertyChanges = statePropertyChanges;
             $scope.changedStates = changedStates;
             $scope.addedStates = addedStates;
             $scope.deletedStates = deletedStates;
+            $scope.gadgetPropertyChanges = gadgetPropertyChanges;
+            $scope.changedGadgets = changedGadgets;
+            $scope.addedGadgets = addedGadgets;
+            $scope.deletedGadgets = deletedGadgets;
             $scope.isExplorationPrivate = isExplorationPrivate;
 
             // For reasons of backwards compatibility, the following keys
@@ -575,6 +601,14 @@ oppia.controller('ExplorationSaveAndPublishButtons', [
               'widget_handlers': 'Rules'
             }
 
+            // For reasons of backwards compatibility, the following keys
+            // should not be changed.
+            $scope.GADGET_BACKEND_NAMES_TO_HUMAN_NAMES = {
+              'name': 'Gadget name',
+              'gadget_visibility': 'Gadget visibility between states',
+              'gadget_customization_args': 'Gadget customizations'
+            }
+
             // An ordered list of state properties that determines the order in which
             // to show them in the save confirmation modal.
             // For reasons of backwards compatibility, the following keys
@@ -589,6 +623,8 @@ oppia.controller('ExplorationSaveAndPublishButtons', [
               $scope.explorationPropertyChanges);
             $scope.stateChangesExist = !$.isEmptyObject(
               $scope.statePropertyChanges);
+            $scope.gadgetChangesExist = !$.isEmptyObject(
+              $scope.gadgetPropertyChanges);
 
             $scope._getLongFormPropertyChange = function(humanReadableName, changeInfo) {
               return (
@@ -616,8 +652,28 @@ oppia.controller('ExplorationSaveAndPublishButtons', [
               }
             };
 
+            // TODO(anuzis/vjoisar): Karma tests to confirm FE change
+            // summaries display properly.
+            $scope.formatGadgetPropertyChange = function(
+                propertyName, changeInfo) {
+              // TESTING
+              console.log('Changing gadget property with propertyName: ' + propertyName);
+              // TESTING
+              if (propertyName == 'name') {
+                return $scope._getLongFormPropertyChange(
+                  $scope.GADGET_BACKEND_NAMES_TO_HUMAN_NAMES[propertyName],
+                  changeInfo);
+              } else {
+                return $scope.GADGET_BACKEND_NAMES_TO_HUMAN_NAMES[propertyName];
+              }
+            };
+
             $scope.formatStateList = function(stateList) {
               return stateList.join('; ');
+            };
+
+            $scope.formatGadgetList = function(gadgetList) {
+              return gadgetList.join('; ');
             };
 
             $scope.save = function(commitMessage) {

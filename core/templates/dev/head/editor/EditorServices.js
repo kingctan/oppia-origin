@@ -206,8 +206,8 @@ oppia.factory('changeListService', [
   };
 
   var ALLOWED_GADGET_BACKEND_NAMES = {
-    'visible_in_states': true,
-    'customization_args': true
+    'gadget_visibility': true,
+    'gadget_customization_args': true
   }
 
   // Private Methods
@@ -1077,7 +1077,7 @@ oppia.factory('explorationGadgetsService', [
         $log.info('Updating customization args for gadget: ' + gadgetName);
         changeListService.editGadgetProperty(
           gadgetName,
-          'customization_args',
+          'gadget_customization_args',
           newGadgetData.customization_args,
           currentGadgetData.customization_args
         );
@@ -1087,7 +1087,7 @@ oppia.factory('explorationGadgetsService', [
         $log.info('Updating visibility for gadget: ' + gadgetName);
         changeListService.editGadgetProperty(
           gadgetName,
-          'visible_in_states',
+          'gadget_visibility',
           newGadgetData.visible_in_states,
           currentGadgetData.visible_in_states
         );

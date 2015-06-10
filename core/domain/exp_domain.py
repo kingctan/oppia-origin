@@ -47,10 +47,8 @@ STATE_PROPERTY_CONTENT = 'content'
 STATE_PROPERTY_INTERACTION_ID = 'widget_id'
 STATE_PROPERTY_INTERACTION_CUST_ARGS = 'widget_customization_args'
 STATE_PROPERTY_INTERACTION_HANDLERS = 'widget_handlers'
-# @sll: Do we want to expand on this existing pattern? Appears alright to me,
-# but unsure based on backwards compatibility comments above.
-GADGET_PROPERTY_VISIBILITY = 'visible_in_states'
-GADGET_PROPERTY_CUST_ARGS = 'customization_args'
+GADGET_PROPERTY_VISIBILITY = 'gadget_visibility'
+GADGET_PROPERTY_CUST_ARGS = 'gadget_customization_args'
 # Kept for legacy purposes; not used anymore.
 STATE_PROPERTY_INTERACTION_STICKY = 'widget_sticky'
 
@@ -141,6 +139,7 @@ class ExplorationChange(object):
             self.old_value = change_dict.get('old_value')
         elif self.cmd == 'add_gadget':
             self.gadget_dict = change_dict['gadget_dict']
+            self.gadget_name = change_dict['gadget_dict']['gadget_name']
             self.panel_name = change_dict['panel_name']
         elif self.cmd == 'rename_gadget':
             self.old_gadget_name = change_dict['old_gadget_name']

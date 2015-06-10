@@ -517,8 +517,9 @@ class EntityChangeListSummarizer(object):
             try:
                 entity_name = getattr(change, self.entity_name)
             except AttributeError:
-                # ExplorationChange is for a different type of entity.
-                continue
+                # The change is a rename command, which uses explicit
+                # old_entity_name and new_entity_names instead.
+                pass
             if change.cmd == self.add_entity:
                 if entity_name in self.changed:
                     continue
@@ -602,6 +603,9 @@ def get_summary_of_change_list(base_exploration, change_list):
     """
     # TODO(sll): This really needs tests, especially the diff logic. Probably
     # worth comparing with the actual changed exploration.
+
+    # TODO(anuzis): need to capture changes in gadget positioning
+    # between and within panels.
 
     # Ensure that the original exploration does not get altered.
     exploration = copy.deepcopy(base_exploration)
@@ -824,6 +828,29 @@ def _get_simple_changelist_summary(
                 full_summary['state_property_changes'].keys())
             short_summary_fragments.append(
                 'edited \'%s\'' % '\', \''.join(affected_states))
+
+        # @sll: Method is non-DRY outside of find/replace 'state' to 'gadget'.
+        # Thinking about the best solution, since this method is for backend
+        # history logs perhaps we can greatly simplify the method with a
+        # simpler pprint of the raw dict object.
+        #
+        # Related: grepping the codebase shows this method is called 0 times.
+        # Is it still necessary? -anuzis
+        if full_summary['added_gadgets']:
+            short_summary_fragments.append(
+                'added \'%s\'' % '\', \''.join(full_summary['added_gadgets']))
+        if full_summary['deleted_gadgets']:
+            short_summary_fragments.append(
+                'deleted \'%s\'' % '\', \''.join(
+                    full_summary['deleted_gadgets']))
+        if (full_summary['changed_gadgets'] or
+                full_summary['gadget_property_changes']):
+            affected_gadgets = (
+                full_summary['changed_gadgets'] +
+                full_summary['gadget_property_changes'].keys())
+            short_summary_fragments.append(
+                'edited \'%s\'' % '\', \''.join(affected_gadgets))
+
         if full_summary['exploration_property_changes']:
             short_summary_fragments.append(
                 'edited exploration properties %s' % ', '.join(
