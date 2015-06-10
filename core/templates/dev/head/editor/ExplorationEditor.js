@@ -656,9 +656,6 @@ oppia.controller('ExplorationSaveAndPublishButtons', [
             // summaries display properly.
             $scope.formatGadgetPropertyChange = function(
                 propertyName, changeInfo) {
-              // TESTING
-              console.log('Changing gadget property with propertyName: ' + propertyName);
-              // TESTING
               if (propertyName == 'name') {
                 return $scope._getLongFormPropertyChange(
                   $scope.GADGET_BACKEND_NAMES_TO_HUMAN_NAMES[propertyName],
