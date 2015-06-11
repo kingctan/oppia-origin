@@ -29,7 +29,6 @@ oppia.directive('oppiaGadgetPreview', function() {
 
       $scope.$watchCollection('gadgetCustomizationArgs()', function(newVal, oldVal) {
         if(newVal !== oldVal) {
-          console.log('gadget customization args changed.');
           $scope.gadgetHtml = _generateHtml();
         }
       }, true);

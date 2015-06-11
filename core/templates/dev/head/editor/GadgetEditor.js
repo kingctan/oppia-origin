@@ -71,14 +71,13 @@ oppia.controller('GadgetEditor', [
     /**
     * @param {gadgetEditData=} An Dict that contains existing data required when
     *                          editing a gadget of following type.
-                  gadgetEditData = {
-                    'gadget_id' : value,
-                    'gadget_name' : value,
-                    'customization_args' : value,
-                    'visible_in_states : value'
-                  }
-                  Passed from _gadgets.
-
+    *             gadgetEditData = {
+    *               'gadget_id' : value,
+    *               'gadget_name' : value,
+    *               'customization_args' : value,
+    *               'visible_in_states : value'
+    *             }
+    *             Passed from _gadgets.
     *
     */
     $scope.openCustomizeGadgetModal = function(gadgetEditData) {
