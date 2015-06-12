@@ -507,8 +507,6 @@ class EntityChangeListSummarizer(object):
     def old_entity_name(self):
         return 'old_' + self.base_name + '_name'
 
-
-
     def _process_changes(self, original_entity_names, changes):
         """Process changes."""
         original_names = {name: name for name in original_entity_names}
