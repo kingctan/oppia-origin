@@ -1016,8 +1016,6 @@ oppia.factory('explorationGadgetsService', [
   };
 
   var _changeToBackendCompatibleDict = function(gadgetData) {
-      console.log(gadgetData);
-
       // Convert to backend property names.
       var backendDict = {};
       backendDict.gadget_id = gadgetData.gadgetId;
@@ -1061,9 +1059,9 @@ oppia.factory('explorationGadgetsService', [
      * @param {object} newGadgetData Updated data for the gadget.
      */
     updateGadget: function(newGadgetData) {
-      var panelName = newGadgetData.position;
-      newGadgetData = _changeToBackendCompatibleDict(newGadgetData);
-      var gadgetName = newGadgetData.gadget_name;
+      newBackendCompatibleGadgetData = _changeToBackendCompatibleDict(newGadgetData);
+
+      var gadgetName = newBackendCompatibleGadgetData.gadget_name;
 
       if (!_gadgets.hasOwnProperty[gadgetName]) {
         $log.info('Attempted to update a non-existent gadget: ' + gadgetName);
@@ -1073,26 +1071,26 @@ oppia.factory('explorationGadgetsService', [
 
       // TODO(anuzis/vjoisar): Karma tests. Needs to detect deep inequality.
       if (currentGadgetData.customization_args !=
-          newGadgetData.customization_args) {
+          newBackendCompatibleGadgetData.customization_args) {
         $log.info('Updating customization args for gadget: ' + gadgetName);
         changeListService.editGadgetProperty(
           gadgetName,
           'gadget_customization_args',
-          newGadgetData.customization_args,
+          newBackendCompatibleGadgetData.customization_args,
           currentGadgetData.customization_args
         );
       }
       if (currentGadgetData.visible_in_states !=
-          newGadgetData.visible_in_states) {
+          newBackendCompatibleGadgetData.visible_in_states) {
         $log.info('Updating visibility for gadget: ' + gadgetName);
         changeListService.editGadgetProperty(
           gadgetName,
           'gadget_visibility',
-          newGadgetData.visible_in_states,
+          newBackendCompatibleGadgetData.visible_in_states,
           currentGadgetData.visible_in_states
         );
       }
-      _gadgets[gadgetName] = angular.copy(newGadgetData);
+      _gadgets[gadgetName] = angular.copy(newBackendCompatibleGadgetData);
       $rootScope.$broadcast('gadgetsChangedOrInitialized');
     },
     addGadget: function(gadgetData, panelName) {
@@ -1102,19 +1100,19 @@ oppia.factory('explorationGadgetsService', [
         return;
       }
 
-      gadgetData = _changeToBackendCompatibleDict(gadgetData);
-
-      if(!!_gadgets.hasOwnProperty(gadgetData.gadget_name)){
-        $log.info('Gadget with this name already exists.');
-        return;
-      }
       /*
         To avoid mismatched dict keys in _gadgets
-      */      
-      _gadgets[gadgetData.gadget_name] = gadgetData;
-      _panels[panelName].push(gadgetData.gadget_name);
+      */  
+      backendCompatibleGadgetData = _changeToBackendCompatibleDict(gadgetData);
+
+      if(!!_gadgets.hasOwnProperty(backendCompatibleGadgetData.gadget_name)){
+        $log.info('Gadget with this name already exists.');
+        return;
+      }    
+      _gadgets[backendCompatibleGadgetData.gadget_name] = backendCompatibleGadgetData;
+      _panels[panelName].push(backendCompatibleGadgetData.gadget_name);
       $rootScope.$broadcast('gadgetsChangedOrInitialized');
-      changeListService.addGadget(gadgetData, panelName);
+      changeListService.addGadget(backendCompatibleGadgetData, panelName);
     },
     deleteGadget: function(deleteGadgetName) {
       warningsData.clear();
@@ -1167,7 +1165,6 @@ oppia.factory('explorationGadgetsService', [
       });
     },
     renameGadget: function(oldGadgetName, newGadgetName) {
-      console.log(oldGadgetName + '---' + newGadgetName)
       newGadgetName = $filter('normalizeWhitespace')(newGadgetName);
       if (!_isNewGadgetNameValid(newGadgetName, true)) {
         return;

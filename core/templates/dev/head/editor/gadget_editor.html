@@ -3,13 +3,13 @@
     <strong>Gadgets</strong>
   </span>
   <md-card style="background-color: white; margin: 20px 0px; padding: 10px 10px;">
-    <button type="button" class="btn btn-default btn-xs oppia-add-gadget-button protractor-test-open-add-gadget-modal" ng-click="openGadgetModal()">
+    <button type="button" class="btn btn-default btn-xs oppia-add-gadget-button protractor-test-open-add-gadget-modal" ng-click="openCustomizeGadgetModal()">
       Insert Gadget
     </button>
   </md-card>
   <div ng-show="gadgets">
-    <div ng-repeat="(key, panel) in panels" class="oppia-<[key]>-editor-gadget-panel">
-      <div ng-repeat="gadgetName in panel">
+    <div ng-repeat="(key, panelContents) in panels" class="oppia-<[key]>-editor-gadget-panel">
+      <div ng-repeat="gadgetName in panelContents">
         <span title="DELETE <[gadgetName]>" ng-click="deleteGadget(gadgetName)"
           class="glyphicon glyphicon-remove protractor-test-delete-interaction oppia-gadget-delete-icon">
         </span>
@@ -20,7 +20,7 @@
           <input type="text" ng-model="newGadgetName" />
           <button class="btn btn-default btn-sm" ng-click="renameGadget(newGadgetName)">Done</button>
         </span>
-        <div class='oppia-gadget-preview-container' ng-click="openGadgetModal(gadgets[gadgetName], key)">
+        <div class='oppia-gadget-preview-container' ng-click="openCustomizeGadgetModal(gadgets[gadgetName])">
           <oppia-gadget-preview  
             gadget-id="gadgets[gadgetName].gadget_id" 
             gadget-customization-args="gadgets[gadgetName].customization_args"
@@ -36,7 +36,7 @@
   </div>
 </div>
 
-<script type="text/ng-template" id="modals/addGadget">
+<script type="text/ng-template" id="modals/customizeGadget">
   <div class="modal-header" style="border-bottom: 0; padding-bottom: 0;">
     <h3 ng-if="!gadgetData.gadgetId">
       Insert a gadget
@@ -54,20 +54,17 @@
       </span>
     </div>
     <div ng-if="gadgetData.gadgetId" class="customization-editor">
-      <div class="gadget-name-panel">
+      <div ng-show="!editingGadget" class="gadget-name-panel">
         <label>Gadget Name</label>
         <input ng-disabled="editingGadget" ng-model="gadgetData.gadgetName" />
       </div>
-      <div class="gadget-layout-panel">
-        <div ng-if="false"> TODO(vjoisar): Build select from available panels, not available for now.</div>
+      <div ng-show="!editingGadget" class="gadget-layout-panel">
         <label class="oppia-gadget-customization-label">Layout</label>
-        <select ng-disabled="editingGadget" ng-model="gadgetData.position" >
-          <option value="left">Left</option>
-          <option value="right">Right</option>
-          <option value="bottom">Bottom</option>
+        <select ng-options="panelname for panelname in availablePanels"
+                 ng-model="gadgetData.position" style="text-transform:capitalize;">
         </select>
       </div>
-      <div class="gadget-state-panel"> 
+      <div class="gadget-state-visibility-panel"> 
         <h2 class="oppia-gadget-customization-label">Visible in states</h2>
         <label class="oppia-gadget-customization-label" 
                ng-repeat="state in explorationStates" >
