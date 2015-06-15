@@ -2042,6 +2042,7 @@ class ExplorationSummaryGetTests(ExplorationServicesUnitTests):
         self.assertEqual(actual_summaries,
                          expected_summaries)
 
+
 class ChangeListSummaryUnitTests(ExplorationServicesUnitTests):
     """Test change list summaries generate as expected for edge cases.
 
@@ -2067,196 +2068,209 @@ class ChangeListSummaryUnitTests(ExplorationServicesUnitTests):
         'deleted_gadgets': []
     }
 
-    # CHANGE_LIST_ONE
-    change_dict1 = {
-        'cmd': 'edit_state_property',
-        'new_value': [{'value': '<p>a</p>', 'type': 'text'}],
-        'property_name': 'content',
-        'old_value': [{'value': '', 'type': 'text'}],
-        'state_name': 'First State'
-    }
-    change_dict2 = {
-        'cmd': 'edit_state_property',
-        'new_value': 'Continue',
-        'property_name': 'widget_id',
-        'old_value': None,
-        'state_name': 'First State'
-    }
-    change_dict3 = {
-        'cmd': 'edit_state_property',
-        'new_value': {'buttonText': {'value': 'Continue'}},
-        'property_name': 'widget_customization_args',
-        'old_value': {},
-        'state_name': 'First State'
-    }
-    change_dict4 = {
-        'cmd': 'edit_state_property',
-        'new_value': {
-            'submit': [
-                {
+    CHANGE_LIST_ONE = [
+        {
+            'cmd': 'edit_state_property',
+            'new_value': [{'value': '<p>a</p>', 'type': 'text'}],
+            'property_name': 'content',
+            'old_value': [{'value': '', 'type': 'text'}],
+            'state_name': 'First State'
+        }, {
+            'cmd': 'edit_state_property',
+            'new_value': 'Continue',
+            'property_name': 'widget_id',
+            'old_value': None,
+            'state_name': 'First State'
+        }, {
+            'cmd': 'edit_state_property',
+            'new_value': {'buttonText': {'value': 'Continue'}},
+            'property_name': 'widget_customization_args',
+            'old_value': {},
+            'state_name': 'First State'
+        }, {
+            'cmd': 'edit_state_property',
+            'new_value': {
+                'submit': [{
                     'dest': 'END', 'definition': {
                         'rule_type': 'default'
                     },
                     'param_changes': [],
                     'feedback': []
-                }
-            ]
-        },
-        'property_name': 'widget_handlers',
-        'old_value': {
-            'submit': [
-                {
+                }]
+            },
+            'property_name': 'widget_handlers',
+            'old_value': {
+                'submit': [{
                     'dest': 'First State',
                     'definition': {
                         'rule_type': 'default'
                     },
                     'param_changes': [],
                     'feedback': []
-                }
-            ]
-        },
-        'state_name': 'First State'
-    }
-    CHANGE_LIST_ONE = [
-        change_dict1, change_dict2,
-        change_dict3, change_dict4
+                }]
+            },
+            'state_name': 'First State'
+        }
     ]
 
-    # CHANGE_LIST_TWO
-    change_dict5 = {
-        'new_value': [
-            {
+    CHANGE_LIST_TWO = [
+        {
+            'new_value': [{
                 'type': 'text',
                 'value': '<p>EDITED CONTENT here</p>'
-            }
-        ],
-        'old_value': [
-            {
+            }],
+            'old_value': [{
                 'type': 'text',
                 'value': '<p>a</p>'
-            }
-        ],
-        'cmd': 'edit_state_property',
-        'state_name': 'First State',
-        'property_name': 'content'
-    }
-    change_dict6 = {
-        'old_state_name': 'First State',
-        'cmd': 'rename_state',
-        'new_state_name': 'First State renamed'
-    }
-    change_dict7 = {
-        'new_value': 'First State renamed',
-        'old_value': 'First State',
-        'cmd': 'edit_exploration_property',
-        'property_name': 'init_state_name'
-    }
+            }],
+            'cmd': 'edit_state_property',
+            'state_name': 'First State',
+            'property_name': 'content'
+        }, {
+            'old_state_name': 'First State',
+            'cmd': 'rename_state',
+            'new_state_name': 'First State renamed'
+        }, {
+            'new_value': 'First State renamed',
+            'old_value': 'First State',
+            'cmd': 'edit_exploration_property',
+            'property_name': 'init_state_name'
+        }
+    ]
 
-    CHANGE_LIST_TWO = [change_dict5, change_dict6, change_dict7]
-
-    # CHANGE_LIST_THREE
-    change_dict8 = {
-        'cmd': 'add_gadget',
-        'gadget_dict': {
-            'gadget_id': 'AdviceBar',
-            'visible_in_states': ['First State renamed'],
-            'customization_args': {
-                'adviceObjects': {
-                    'value': [
-                        {
+    CHANGE_LIST_THREE = [
+        {
+            'cmd': 'add_gadget',
+            'gadget_dict': {
+                'gadget_id': 'AdviceBar',
+                'visible_in_states': ['First State renamed'],
+                'customization_args': {
+                    'adviceObjects': {
+                        'value': [{
                             'adviceTitle': 'b',
                             'adviceHtml': '<p>c</p>'
-                        }
-                    ]
+                        }]
+                    },
+                    'title': {
+                        'value': 'a'
+                    }
+                },
+                'gadget_name': 'AdviceBar'
+            },
+            'panel_name': 'left'
+        }
+    ]
+
+    CHANGE_LIST_FOUR_DELETE_ONLY = [
+        {
+            'cmd': 'delete_gadget',
+            'gadget_name': 'AdviceBar'
+        }
+    ]
+
+    CHANGE_LIST_FOUR_EDIT_ONLY = [
+        {
+            'new_value': {
+                'adviceObjects': {
+                    'value': [{
+                        'adviceTitle': 'b',
+                        'adviceHtml': '<p>cG</p>'
+                    }]
                 },
                 'title': {
                     'value': 'a'
                 }
             },
-            'gadget_name': 'AdviceBar'
-        },
-        'panel_name': 'left'
-    }
-
-    CHANGE_LIST_THREE = [change_dict8]
-
-    # CHANGE_LIST_FOUR
-    change_dict9 = {
-        'new_value': {
-            'adviceObjects': {
-                'value': [
-                    {
-                        'adviceTitle': 'b',
-                        'adviceHtml': '<p>cG</p>'
-                    }
-                ]
-            },
-            'title': {
-                'value': 'a'
-            }
-        },
-        'old_value': {
-            'adviceObjects': {
-                'value': [
-                    {
-                        'adviceTitle': 'b',
-                        'adviceHtml': '<p>c</p>'
-                    }
-                ]
-            },
-            'title': {'value': 'a'}
-        },
-        'cmd': 'edit_gadget_property',
-        'gadget_name': 'AdviceBar',
-        'property_name': 'gadget_customization_args'
-    }
-    change_dict10 = {
-        'new_value': ['First State renamed'],
-        'old_value': ['First State renamed'],
-        'cmd': 'edit_gadget_property',
-        'gadget_name': 'AdviceBar',
-        'property_name': 'gadget_visibility'
-    }
-    change_dict11 = {
-        'cmd': 'delete_gadget',
-        'gadget_name': 'AdviceBar'
-    }
-    CHANGE_LIST_FOUR = [change_dict9, change_dict10, change_dict11]
-
-    # CHANGE_LIST_FIVE
-    change_dict12 = {
-        'cmd': 'add_gadget',
-        'gadget_dict': {
-            'gadget_id': 'AdviceBar',
-            'visible_in_states': ['First State renamed'],
-            'customization_args': {
+            'old_value': {
                 'adviceObjects': {
                     'value': [{
-                        'adviceTitle': 'b', 'adviceHtml': '<p>c</p>'
+                        'adviceTitle': 'b',
+                        'adviceHtml': '<p>c</p>'
                     }]
                 },
                 'title': {'value': 'a'}
             },
+            'cmd': 'edit_gadget_property',
+            'gadget_name': 'AdviceBar',
+            'property_name': 'gadget_customization_args'
+        }, {
+            'new_value': ['First State renamed'],
+            'old_value': ['First State renamed'],
+            'cmd': 'edit_gadget_property',
+            'gadget_name': 'AdviceBar',
+            'property_name': 'gadget_visibility'
+        }
+    ]
+
+    CHANGE_LIST_FOUR = [
+        {
+            'new_value': {
+                'adviceObjects': {
+                    'value': [{
+                        'adviceTitle': 'b',
+                        'adviceHtml': '<p>cG</p>'
+                    }]
+                },
+                'title': {
+                    'value': 'a'
+                }
+            },
+            'old_value': {
+                'adviceObjects': {
+                    'value': [{
+                        'adviceTitle': 'b',
+                        'adviceHtml': '<p>c</p>'
+                    }]
+                },
+                'title': {'value': 'a'}
+            },
+            'cmd': 'edit_gadget_property',
+            'gadget_name': 'AdviceBar',
+            'property_name': 'gadget_customization_args'
+        }, {
+            'new_value': ['First State renamed'],
+            'old_value': ['First State renamed'],
+            'cmd': 'edit_gadget_property',
+            'gadget_name': 'AdviceBar',
+            'property_name': 'gadget_visibility'
+        }, {
+            'cmd': 'delete_gadget',
             'gadget_name': 'AdviceBar'
-        },
-        'panel_name': 'left'
-    }
-    change_dict13 = {
-        'new_value': [{
-            'type': 'text', 'value': '<p>EDITED CONTENT here 2</p>'
-        }],
-        'old_value': [{
-            'type': 'text', 'value': '<p>EDITED CONTENT here</p>'
-        }],
-        'cmd': 'edit_state_property',
-        'state_name': 'First State renamed',
-        'property_name': 'content'
-    }
-    change_dict14 = {
-        'cmd': 'delete_gadget',
-        'gadget_name': 'AdviceBar'
-    }
-    CHANGE_LIST_FIVE = [change_dict12, change_dict13, change_dict14]
+        }
+    ]
+
+    CHANGE_LIST_FIVE = [
+        {
+            'cmd': 'add_gadget',
+            'gadget_dict': {
+                'gadget_id': 'AdviceBar',
+                'visible_in_states': ['First State renamed'],
+                'customization_args': {
+                    'adviceObjects': {
+                        'value': [{
+                            'adviceTitle': 'b', 'adviceHtml': '<p>c</p>'
+                        }]
+                    },
+                    'title': {'value': 'a'}
+                },
+                'gadget_name': 'AdviceBar'
+            },
+            'panel_name': 'left'
+        }, {
+            'new_value': [{
+                'type': 'text', 'value': '<p>EDITED CONTENT here 2</p>'
+            }],
+            'old_value': [{
+                'type': 'text', 'value': '<p>EDITED CONTENT here</p>'
+            }],
+            'cmd': 'edit_state_property',
+            'state_name': 'First State renamed',
+            'property_name': 'content'
+        }, {
+            'cmd': 'delete_gadget',
+            'gadget_name': 'AdviceBar'
+        }
+    ]
 
     def setUp(self):
         """Prepare an exploration instance to receive changes via
@@ -2340,13 +2354,19 @@ class ChangeListSummaryUnitTests(ExplorationServicesUnitTests):
 
         self.assertEqual(actual_result, expected_result)
 
-        # CHANGE_LIST_TWO
-
         # Apply changes from list one so future changes can be applied.
-        self.exploration = exp_services.apply_change_list(
+        #
+        # Note that this test cannot use exp_services.apply_change_list as
+        # that method generates an Exploration instance from the backend
+        # model, but does not save back to it.
+        exp_services.update_exploration(
+            self.ALBERT_ID,
             self.EXP_ID,
-            ChangeListSummaryUnitTests.CHANGE_LIST_ONE)
+            ChangeListSummaryUnitTests.CHANGE_LIST_ONE,
+            "a commit message")
+        self.exploration = exp_services.get_exploration_by_id(self.EXP_ID)
 
+        # CHANGE_LIST_TWO
         actual_result = exp_services.get_summary_of_change_list(
             self.exploration,
             ChangeListSummaryUnitTests.CHANGE_LIST_TWO
@@ -2385,13 +2405,15 @@ class ChangeListSummaryUnitTests(ExplorationServicesUnitTests):
 
         self.assertEqual(actual_result, expected_result)
 
-        # CHANGE_LIST_THREE
-
         # Apply changes from list two so future changes can be applied.
-        self.exploration = exp_services.apply_change_list(
+        exp_services.update_exploration(
+            self.ALBERT_ID,
             self.EXP_ID,
-            ChangeListSummaryUnitTests.CHANGE_LIST_TWO)
+            ChangeListSummaryUnitTests.CHANGE_LIST_TWO,
+            "a commit message")
+        self.exploration = exp_services.get_exploration_by_id(self.EXP_ID)
 
+        # CHANGE_LIST_THREE
         actual_result = exp_services.get_summary_of_change_list(
             self.exploration,
             ChangeListSummaryUnitTests.CHANGE_LIST_THREE
@@ -2403,13 +2425,15 @@ class ChangeListSummaryUnitTests(ExplorationServicesUnitTests):
 
         self.assertEqual(actual_result, expected_result)
 
-        # CHANGE_LIST_FOUR
-
         # Apply changes from list three so future changes can be applied.
-        self.exploration = exp_services.apply_change_list(
+        exp_services.update_exploration(
+            self.ALBERT_ID,
             self.EXP_ID,
-            ChangeListSummaryUnitTests.CHANGE_LIST_THREE)
+            ChangeListSummaryUnitTests.CHANGE_LIST_THREE,
+            "a commit message")
+        self.exploration = exp_services.get_exploration_by_id(self.EXP_ID)
 
+        # CHANGE_LIST_FOUR
         actual_result = exp_services.get_summary_of_change_list(
             self.exploration,
             ChangeListSummaryUnitTests.CHANGE_LIST_FOUR
@@ -2444,23 +2468,34 @@ class ChangeListSummaryUnitTests(ExplorationServicesUnitTests):
 
         self.assertEqual(actual_result, expected_result)
 
-        """
-        # CHANGE_LIST_FIVE
-        TODO(anuzis): Get this test to pass.
-
         # Apply changes from list four so future changes can be applied.
-
-        self.exploration = exp_services.apply_change_list(
+        exp_services.update_exploration(
+            self.ALBERT_ID,
             self.EXP_ID,
-            ChangeListSummaryUnitTests.CHANGE_LIST_FOUR)
+            ChangeListSummaryUnitTests.CHANGE_LIST_FOUR,
+            "a commit message")
+        self.exploration = exp_services.get_exploration_by_id(self.EXP_ID)
 
+        # CHANGE_LIST_FIVE
         actual_result = exp_services.get_summary_of_change_list(
             self.exploration,
             ChangeListSummaryUnitTests.CHANGE_LIST_FIVE
         )
         expected_result = copy.deepcopy(
             ChangeListSummaryUnitTests.BASE_CHANGE_SUMMARY_DATA_STRUCTURE)
+        expected_result['state_property_changes'] = {
+            'First State renamed': {
+                'content': {
+                    'new_value': [{
+                        'type': 'text',
+                        'value': '<p>EDITED CONTENT here 2</p>'
+                    }],
+                    'old_value': [{
+                        'type': 'text',
+                        'value': '<p>EDITED CONTENT here</p>'
+                    }]
+                }
+            }
+        }
 
         self.assertEqual(actual_result, expected_result)
-
-        """
