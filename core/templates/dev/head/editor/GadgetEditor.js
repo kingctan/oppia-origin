@@ -20,12 +20,10 @@
 
 // TODO(vjoisar): desc for the gadget ui editor
 oppia.controller('GadgetEditor', [
-  '$scope', '$http', '$rootScope', '$modal', '$filter', 'editorContextService',
-  'oppiaHtmlEscaper', 'explorationGadgetsService', 
-  'extensionTagAssemblerService', 'GADGET_SPECS',
-  function($scope, $http, $rootScope, $modal, $filter, editorContextService,
-    oppiaHtmlEscaper, explorationGadgetsService,
-    extensionTagAssemblerService, GADGET_SPECS) {
+  '$scope', '$modal', 'editorContextService', 'explorationGadgetsService',
+  'GADGET_SPECS',
+  function($scope, $modal, editorContextService, explorationGadgetsService,
+    GADGET_SPECS) {
 
     $scope.$on('gadgetsChangedOrInitialized', function(evt) {
       $scope.getAllGadgetsInfo();
@@ -52,7 +50,7 @@ oppia.controller('GadgetEditor', [
           $scope.oldGadgetName + " New name: " + $scope.newGadgetName);
       }
       else if($scope.oldGadgetName != $scope.newGadgetName) {
-        explorationGadgetsService.renameGadget($scope.oldGadgetName, 
+        explorationGadgetsService.renameGadget($scope.oldGadgetName,
                                                $scope.newGadgetName);
       }
       $scope.oldGadgetName = '';
@@ -75,7 +73,7 @@ oppia.controller('GadgetEditor', [
     *               'gadget_id' : value,
     *               'gadget_name' : value,
     *               'customization_args' : value,
-    *               'visible_in_states : value'
+    *               'visible_in_states' : value
     *             }
     *             Passed from _gadgets.
     *
@@ -91,11 +89,11 @@ oppia.controller('GadgetEditor', [
           }
         },
         controller: [
-          '$scope', '$modalInstance', 'explorationStatesService', 
+          '$scope', '$modalInstance', 'explorationStatesService',
           'editorContextService', 'explorationGadgetsService', 'gadgetEditData',
           'GADGET_SPECS',
-          function($scope, $modalInstance, explorationStatesService, 
-            editorContextService, explorationGadgetsService, gadgetEditData, 
+          function($scope, $modalInstance, explorationStatesService,
+            editorContextService, explorationGadgetsService, gadgetEditData,
             GADGET_SPECS) {
 
           $scope.ALLOWED_GADGETS = GLOBALS.ALLOWED_GADGETS;
@@ -140,7 +138,7 @@ oppia.controller('GadgetEditor', [
             _loadSchemaForm(gadgetEditData.gadget_id);
           }
 
-          $scope.explorationStates = 
+          $scope.explorationStates =
             Object.keys(explorationStatesService.getStates());
 
           $scope.onChangeGadgetId = function(newGadgetId) {
@@ -148,7 +146,7 @@ oppia.controller('GadgetEditor', [
             $scope.gadgetData.gadgetName = (
               explorationGadgetsService.getUniqueGadgetName(newGadgetId)
             );
-            $scope.gadgetData.visibleInStates= 
+            $scope.gadgetData.visibleInStates=
                 [editorContextService.getActiveStateName()];
             _loadSchemaForm(newGadgetId);
           };
@@ -180,7 +178,7 @@ oppia.controller('GadgetEditor', [
           };
 
           $scope.addGadget = function() {
-            //TODO(vjoisar):Add Validation if any field is empty to warn user 
+            //TODO(vjoisar):Add Validation if any field is empty to warn user
             //  before saving or closing the dialog;
             var returnObj = {
               mode: "addingGadget",
@@ -190,7 +188,7 @@ oppia.controller('GadgetEditor', [
           };
 
           $scope.updateGadget = function() {
-            //TODO(vjoisar):Add Validation if any field is empty to warn user 
+            //TODO(vjoisar):Add Validation if any field is empty to warn user
             //  before saving or closing the dialog;
             var returnObj = {
               mode: "editingGadget",
