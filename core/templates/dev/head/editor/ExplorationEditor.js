@@ -24,6 +24,7 @@
 // The conditioning on window.GLOBALS is because Karma does not appear to see GLOBALS.
 oppia.constant('INTERACTION_SPECS', window.GLOBALS ? GLOBALS.INTERACTION_SPECS : {});
 oppia.constant('GADGET_SPECS', window.GLOBALS ? GLOBALS.GADGET_SPECS : {});
+oppia.constant('SKIN_PANELS_PROPERTIES', window.GLOBALS ? GLOBALS.SKIN_PANELS_PROPERTIES : {});
 
 oppia.controller('ExplorationEditor', [
   '$scope', '$http', '$window', '$rootScope', '$log', '$timeout',

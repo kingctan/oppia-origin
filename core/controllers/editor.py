@@ -202,6 +202,9 @@ class ExplorationPage(EditorHandler):
         skin_templates = skins_services.Registry.get_skin_templates(
             skins_services.Registry.get_all_skin_ids())
 
+        skin_panels_properties = skins_services.Registry.get_skin_by_id(
+            exploration.default_skin).panels_properties
+
         self.values.update({
             'GADGET_SPECS': gadget_registry.Registry.get_all_specs(),
             'INTERACTION_SPECS': interaction_registry.Registry.get_all_specs(),
@@ -244,6 +247,7 @@ class ExplorationPage(EditorHandler):
             'INVALID_PARAMETER_NAMES': feconf.INVALID_PARAMETER_NAMES,
             'NEW_STATE_TEMPLATE': NEW_STATE_TEMPLATE,
             'SHOW_SKIN_CHOOSER': feconf.SHOW_SKIN_CHOOSER,
+            'SKIN_PANELS_PROPERTIES': skin_panels_properties,
             'TAG_REGEX': feconf.TAG_REGEX,
         })
 
