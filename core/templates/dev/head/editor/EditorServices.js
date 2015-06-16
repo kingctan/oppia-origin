@@ -972,7 +972,7 @@ oppia.factory('explorationGadgetsService', [
     }
     return true;
     return (
-      // TODO(anuzis/vjoisar): implement validatorsService.isValidGadgetName
+      // TODO(vjoisar): implement validatorsService.isValidGadgetName
       validatorsService.isValidGadgetName(newGadgetName, showWarnings));
   };
   
@@ -1011,7 +1011,7 @@ oppia.factory('explorationGadgetsService', [
   var _validatePanel = function(panelName) {
     // Validates fit and internal validity of all gadgets in a panel.
     // Returns boolean.
-    // TODO(anuzis/vjoisar): Implement.
+    // TODO(vjoisar): Implement.
     return true;
   };
 
@@ -1069,7 +1069,7 @@ oppia.factory('explorationGadgetsService', [
       }
       var currentGadgetData = _gadgets[gadgetName];
 
-      // TODO(anuzis/vjoisar): Karma tests. Needs to detect deep inequality.
+      // TODO(vjoisar): Karma tests. Needs to detect deep inequality.
       if (currentGadgetData.customization_args !=
           newBackendCompatibleGadgetData.customization_args) {
         $log.info('Updating customization args for gadget: ' + gadgetName);
@@ -1125,9 +1125,6 @@ oppia.factory('explorationGadgetsService', [
         changeListService.deleteGadget(deleteGadgetName);
       }
       $modal.open({
-        // TODO(anuzis/vjoisar): implement script ID for 'modals/deleteGadget'
-        // based on pattern for modals/deleteState, but outside
-        // exploration_graph.html
         templateUrl: 'modals/deleteGadget',
         backdrop: true,
         resolve: {

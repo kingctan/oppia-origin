@@ -655,8 +655,6 @@ oppia.controller('ExplorationSaveAndPublishButtons', [
               }
             };
 
-            // TODO(anuzis/vjoisar): Karma tests to confirm FE change
-            // summaries display properly.
             $scope.formatGadgetPropertyChange = function(
                 propertyName, changeInfo) {
               if (propertyName == 'name') {

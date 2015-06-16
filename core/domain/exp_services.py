@@ -686,7 +686,7 @@ def get_summary_of_change_list(base_exploration, change_list):
     # worth comparing with the actual changed exploration.
 
     # TODO(anuzis): need to capture changes in gadget positioning
-    # between and within panels.
+    # between and within panels when we expand support for these actions.
 
     # Ensure that the original exploration does not get altered.
     exploration = copy.deepcopy(base_exploration)

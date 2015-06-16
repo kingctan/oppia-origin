@@ -1629,6 +1629,9 @@ class Exploration(object):
                     if rule.dest == old_state_name:
                         rule.dest = new_state_name
 
+        self._update_gadget_visibility_for_renamed_state(
+            old_state_name, new_state_name)
+
     def delete_state(self, state_name):
         """Deletes the given state."""
         if state_name not in self.states:
@@ -1648,6 +1651,8 @@ class Exploration(object):
                         rule.dest = other_state_name
 
         del self.states[state_name]
+
+        self._update_gadget_visibility_for_deleted_state(state_name)
 
     # Methods relating to gadgets.
     def add_gadget(self, gadget_dict, panel_name):
@@ -1709,15 +1714,64 @@ class Exploration(object):
                     return panel_name
         raise ValueError('Gadget %s does not exist.' % gadget_name)
 
+    def _update_gadget_visibility_for_renamed_state(
+            self, old_state_name, new_state_name):
+        """Updates the visible_in_states property for gadget instances
+        visible in the renamed state."""
+        affected_gadget_instances = (
+            self._get_gadget_instances_visible_in_state(old_state_name))
+
+        for gadget_instance in affected_gadget_instances:
+            # Order within visible_in_states does not effect functionality.
+            # It's sorted purely for deterministic testing.
+            gadget_instance.visible_in_states.remove(old_state_name)
+            gadget_instance.visible_in_states.append(new_state_name)
+            gadget_instance.visible_in_states.sort()
+
+    def _update_gadget_visibility_for_deleted_state(self, state_name):
+        """Updates the visible_in_states property for gadget instances
+        visible in the deleted state."""
+        affected_gadget_instances = (
+            self._get_gadget_instances_visible_in_state(state_name))
+
+        for gadget_instance in affected_gadget_instances:
+            gadget_instance.visible_in_states.remove(state_name)
+            if len(gadget_instance.visible_in_states) == 0:
+                raise utils.ValidationError(
+                    "Deleting '%s' state leaves '%s' gadget with no visible "
+                    'states. This is not currently supported and should be '
+                    'handled with editor guidance on the front-end.' % (
+                        state_name,
+                        gadget_instance.name)
+                )
+
+    def _get_gadget_instances_visible_in_state(self, state_name):
+        """Helper function to retrieve gadget instances visible in
+        a given state."""
+        gadget_instances = []
+        for gadget_instance in self._gadget_instances:
+            if state_name in gadget_instance.visible_in_states:
+                gadget_instances.append(gadget_instance)
+        return gadget_instances
+
     @property
     def _gadget_names(self):
         """Convenience method to query against current gadget names."""
         gadget_names = set()
         for panel_name in self.skin_instance.panel_contents_dict.iterkeys():
             for gadget_instance in self.skin_instance.panel_contents_dict[
-            panel_name]:
+                    panel_name]:
                 gadget_names.add(gadget_instance.name)
         return sorted(gadget_names)
+
+    @property
+    def _gadget_instances(self):
+        """Convenience method to query against current gadget instances."""
+        gadget_instances = []
+        for gadget_instances_list in (
+                self.skin_instance.panel_contents_dict.itervalues()):
+            gadget_instances.extend(gadget_instances_list)
+        return gadget_instances
 
     @classmethod
     def _convert_states_v0_dict_to_v1_dict(cls, states_dict):
