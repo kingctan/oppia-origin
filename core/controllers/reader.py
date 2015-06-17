@@ -110,31 +110,41 @@ def _get_updated_param_dict(param_dict, param_changes, exp_param_specs):
     return new_param_dict
 
 
-def classify(
-        exp_id, exp_param_specs, state, handler_name, answer, params):
+def classify(exp_id, state, answer, params):
     """Normalize the answer and return the first rulespec that it satisfies."""
     interaction_instance = interaction_registry.Registry.get_interaction_by_id(
         state.interaction.id)
-    normalized_answer = interaction_instance.normalize_answer(
-        answer, handler_name)
+    normalized_answer = interaction_instance.normalize_answer(answer)
 
-    handler = next(
-        h for h in state.interaction.handlers if h.name == handler_name)
-    fs = fs_domain.AbstractFileSystem(fs_domain.ExplorationFileSystem(exp_id))
-    input_type = interaction_instance.get_handler_by_name(
-        handler_name).obj_type
-    for rule_spec in handler.rule_specs:
-        if rule_domain.evaluate_rule(
-                rule_spec.definition, exp_param_specs, input_type, params,
-                normalized_answer, fs):
-            return rule_spec
+    # Find the first group that satisfactorily matches the given answer.
+    for group in state.interaction.answer_groups:
+        fs = fs_domain.AbstractFileSystem(fs_domain.ExplorationFileSystem(exp_id))
+        input_type = interaction_instance.get_submit_handler().obj_type
+        matched_rule_spec = None
+        for rule_spec in group.rule_specs:
+            if rule_domain.evaluate_rule(
+                    rule_spec, input_type, params, normalized_answer, fs):
+                matched_rule_spec = rule_spec
+                break
+        if matched_rule_spec is not None:
+            return {
+                'outcome': group.outcome,
+                'rule_spec_string': (
+                    exp_domain.RuleSpec.stringify_classified_rule(
+                        matched_rule_spec))
+            }
 
-    raise Exception(
-        'No matching rule found for handler %s. Rule specs are %s.' % (
-            handler.name,
-            [rule_spec.to_dict() for rule_spec in handler.rule_specs]
-        )
-    )
+    # If no other groups match, then the default group automatically matches
+    # (if there is one present).
+    if state.interaction.default_outcome is not None:
+        # TODO(bhenning): try to figure out what to do about default obj type
+        return {
+            'outcome': state.interaction.default_outcome,
+            'rule_spec_string': exp_domain.RuleSpec.stringify_classified_rule(
+                None, is_default=True)
+        }
+
+    raise Exception('No matching rule found for submit handler.')
 
 
 class ExplorationPage(base.BaseHandler):
@@ -281,17 +291,12 @@ class AnswerSubmittedEventHandler(base.BaseHandler):
         old_state_name = self.payload.get('old_state_name')
         # The reader's answer.
         answer = self.payload.get('answer')
-        # The answer handler (submit, click, etc.)
-        handler_name = self.payload.get('handler')
         # Parameters associated with the learner.
         old_params = self.payload.get('params', {})
         old_params['answer'] = answer
         # The version of the exploration.
         version = self.payload.get('version')
-        rule_spec_dict = self.payload.get('rule_spec')
-
-        rule_spec = exp_domain.RuleSpec.from_dict_and_obj_type(
-            rule_spec_dict, rule_spec_dict['obj_type'])
+        rule_spec_string = self.payload.get('rule_spec_string')
 
         exploration = exp_services.get_exploration_by_id(
             exploration_id, version=version)
@@ -301,11 +306,10 @@ class AnswerSubmittedEventHandler(base.BaseHandler):
         old_interaction_instance = (
             interaction_registry.Registry.get_interaction_by_id(
                 old_interaction.id))
-        normalized_answer = old_interaction_instance.normalize_answer(
-            answer, handler_name)
+        normalized_answer = old_interaction_instance.normalize_answer(answer)
         # TODO(sll): Should this also depend on `params`?
         event_services.AnswerSubmissionEventHandler.record(
-            exploration_id, version, old_state_name, handler_name, rule_spec,
+            exploration_id, version, old_state_name, rule_spec_string,
             old_interaction_instance.get_stats_log_html(
                 old_interaction.customization_args, normalized_answer))
 
@@ -336,7 +340,11 @@ class StateHitEventHandler(base.BaseHandler):
 
 class ClassifyHandler(base.BaseHandler):
     """Stateless handler that performs a classify() operation server-side and
-    returns the corresponding rule_spec (as a dict).
+    returns the corresponding classification result, which is a dict containing
+    two keys:
+        answer_group: The group which was the best found for classification.
+        rule_spec: The specific rule within the answer group that was the best
+                   match within the group.
     """
 
     REQUIRE_PAYLOAD_CSRF_CHECK = False
@@ -344,26 +352,18 @@ class ClassifyHandler(base.BaseHandler):
     @require_playable
     def post(self, exploration_id):
         """Handles POST requests."""
-        exp_param_specs_dict = self.payload.get('exp_param_specs', {})
-        exp_param_specs = {
-            ps_name: param_domain.ParamSpec.from_dict(ps_val)
-            for (ps_name, ps_val) in exp_param_specs_dict.iteritems()
-        }
         # A domain object representing the old state.
         old_state = exp_domain.State.from_dict(self.payload.get('old_state'))
-        # The name of the rule handler triggered.
-        handler_name = self.payload.get('handler')
         # The learner's raw answer.
         answer = self.payload.get('answer')
         # The learner's parameter values.
         params = self.payload.get('params')
         params['answer'] = answer
 
-        rule_spec = classify(
-            exploration_id, exp_param_specs, old_state, handler_name,
-            answer, params)
+        result = classify(exploration_id, old_state, answer, params)
+        result['outcome'] = result['outcome'].to_dict()
 
-        self.render_json(rule_spec.to_dict_with_obj_type())
+        self.render_json(result)
 
 
 class ReaderFeedbackHandler(base.BaseHandler):
@@ -450,7 +450,7 @@ class ExplorationMaybeLeaveHandler(base.BaseHandler):
 # backend tests should submit directly to the handlers (to maintain parity with
 # production and to avoid code skew).
 def submit_answer_in_tests(
-        exploration_id, state_name, answer, params, handler_name, version):
+        exploration_id, state_name, answer, params, version):
     """This function should only be used by tests."""
     params['answer'] = answer
 
@@ -459,43 +459,42 @@ def submit_answer_in_tests(
     exp_param_specs = exploration.param_specs
     old_state = exploration.states[state_name]
 
-    rule_spec = classify(
-        exploration_id, exp_param_specs, old_state, handler_name,
-        answer, params)
+    result = classify(exploration_id, old_state, answer, params)
+    rule_spec_string = result['rule_spec_string']
+    outcome = result['outcome']
 
     old_interaction_instance = (
         interaction_registry.Registry.get_interaction_by_id(
             old_state.interaction.id))
-    normalized_answer = old_interaction_instance.normalize_answer(
-        answer, handler_name)
+    normalized_answer = old_interaction_instance.normalize_answer(answer)
     # TODO(sll): Should this also depend on `params`?
     event_services.AnswerSubmissionEventHandler.record(
-        exploration_id, version, state_name, handler_name, rule_spec,
+        exploration_id, version, state_name, rule_spec_string,
         old_interaction_instance.get_stats_log_html(
             old_state.interaction.customization_args, normalized_answer))
 
     # This is necessary due to legacy reasons with the old 'END' pseudostate
-    # TODO(bhenning): remove the need for this in this function (should be
+    # TODO(bhenning): Remove the need for this in this function (should be
     # basing terminal logic on whether it is in a terminal state, not
-    # specifically in the 'END' state)
+    # specifically in the 'END' state).
     _OLD_END_DEST = 'END'
     new_state = (
-        None if rule_spec.dest == _OLD_END_DEST
-        else exploration.states[rule_spec.dest])
-    finished = (rule_spec.dest == _OLD_END_DEST)
+        None if outcome.dest == _OLD_END_DEST
+        else exploration.states[outcome.dest])
+    finished = (outcome.dest == _OLD_END_DEST)
     new_params = _get_updated_param_dict(
         params, {} if finished else new_state.param_changes,
         exp_param_specs)
 
     return {
         'feedback_html': jinja_utils.parse_string(
-            rule_spec.get_feedback_string(), params),
+            outcome.get_feedback_string(), params),
         'finished': finished,
         'params': new_params,
         'question_html': (
             new_state.content[0].to_html(new_params)
             if not finished else ''),
-        'state_name': rule_spec.dest if not finished else None,
+        'state_name': outcome.dest if not finished else None,
     }
 
 

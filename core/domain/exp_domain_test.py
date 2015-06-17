@@ -43,7 +43,7 @@ language_code: en
 objective: ''
 param_changes: []
 param_specs: {}
-schema_version: 6
+schema_version: 7
 skin_customizations:
   panels_contents: {}
 states:
@@ -52,15 +52,12 @@ states:
     - type: text
       value: ''
     interaction:
+      answer_groups: []
       customization_args: {}
-      handlers:
-      - name: submit
-        rule_specs:
-        - definition:
-            rule_type: default
-          dest: %s
-          feedback: []
-          param_changes: []
+      default_outcome:
+        dest: %s
+        feedback: []
+        param_changes: []
       id: null
       triggers: []
     param_changes: []
@@ -69,19 +66,16 @@ states:
     - type: text
       value: ''
     interaction:
+      answer_groups: []
       customization_args: {}
-      handlers:
-      - name: submit
-        rule_specs:
-        - definition:
-            rule_type: default
-          dest: New state
-          feedback: []
-          param_changes: []
+      default_outcome:
+        dest: New state
+        feedback: []
+        param_changes: []
       id: null
       triggers: []
     param_changes: []
-states_schema_version: 3
+states_schema_version: 4
 tags: []
 """) % (
     feconf.DEFAULT_INIT_STATE_NAME, feconf.DEFAULT_INIT_STATE_NAME,
@@ -96,7 +90,7 @@ language_code: en
 objective: ''
 param_changes: []
 param_specs: {}
-schema_version: 6
+schema_version: 7
 skin_customizations:
   panels_contents:
     bottom: []
@@ -119,19 +113,16 @@ states:
     - type: text
       value: ''
     interaction:
+      answer_groups: []
       customization_args:
         placeholder:
           value: ''
         rows:
           value: 1
-      handlers:
-      - name: submit
-        rule_specs:
-        - definition:
-            rule_type: default
-          dest: %s
-          feedback: []
-          param_changes: []
+      default_outcome:
+        dest: %s
+        feedback: []
+        param_changes: []
       id: TextInput
       triggers: []
     param_changes: []
@@ -140,19 +131,16 @@ states:
     - type: text
       value: ''
     interaction:
+      answer_groups: []
       customization_args:
         placeholder:
           value: ''
         rows:
           value: 1
-      handlers:
-      - name: submit
-        rule_specs:
-        - definition:
-            rule_type: default
-          dest: New state
-          feedback: []
-          param_changes: []
+      default_outcome:
+        dest: New state
+        feedback: []
+        param_changes: []
       id: TextInput
       triggers: []
     param_changes: []
@@ -161,23 +149,20 @@ states:
     - type: text
       value: ''
     interaction:
+      answer_groups: []
       customization_args:
         placeholder:
           value: ''
         rows:
           value: 1
-      handlers:
-      - name: submit
-        rule_specs:
-        - definition:
-            rule_type: default
-          dest: Second state
-          feedback: []
-          param_changes: []
+      default_outcome:
+        dest: Second state
+        feedback: []
+        param_changes: []
       id: TextInput
       triggers: []
     param_changes: []
-states_schema_version: 3
+states_schema_version: 4
 tags: []
 """) % (
     feconf.DEFAULT_INIT_STATE_NAME, feconf.DEFAULT_INIT_STATE_NAME,
@@ -193,6 +178,9 @@ TEST_GADGETS = {
 class ExplorationDomainUnitTests(test_utils.GenericTestBase):
     """Test the exploration domain object."""
 
+    # TODO(bhenning): Verify this tests both fail cases for an invalid
+    # destination state (both in the default outcome and a regular answer group
+    # outcome).
     def test_validation(self):
         """Test validation of explorations."""
         exploration = exp_domain.Exploration.create_default_exploration(
@@ -518,19 +506,13 @@ class StateExportUnitTests(test_utils.GenericTestBase):
                 'value': u''
             }],
             'interaction': {
+                'answer_groups': [],
                 'customization_args': {},
-                'handlers': [{
-                    'name': u'submit',
-                    'rule_specs': [{
-                        'definition': {
-                            u'rule_type': u'default'
-                        },
-                        'dest': 'New state',
-                        'feedback': [],
-                        'param_changes': [],
-
-                    }]
-                }],
+                'default_outcome': {
+                    'dest': 'New state',
+                    'feedback': [],
+                    'param_changes': [],
+                },
                 'id': None,
                 'triggers': [],
             },
@@ -927,7 +909,75 @@ states_schema_version: 3
 tags: []
 """)
 
-    _LATEST_YAML_CONTENT = YAML_CONTENT_V6
+# TODO(bhenning): THIS IS NOT TESTING CONVERTING NON-DEFAULT RULES OVER TO
+# ANSWER GROUPS.
+    YAML_CONTENT_V7 = (
+"""author_notes: ''
+blurb: ''
+default_skin: conversation_v1
+init_state_name: (untitled state)
+language_code: en
+objective: ''
+param_changes: []
+param_specs: {}
+schema_version: 7
+skin_customizations:
+  panels_contents: {}
+states:
+  (untitled state):
+    content:
+    - type: text
+      value: ''
+    interaction:
+      answer_groups: []
+      customization_args:
+        placeholder:
+          value: ''
+        rows:
+          value: 1
+      default_outcome:
+        dest: (untitled state)
+        feedback: []
+        param_changes: []
+      id: TextInput
+      triggers: []
+    param_changes: []
+  END:
+    content:
+    - type: text
+      value: Congratulations, you have finished!
+    interaction:
+      answer_groups: []
+      customization_args:
+        recommendedExplorationIds:
+          value: []
+      default_outcome: null
+      id: EndExploration
+      triggers: []
+    param_changes: []
+  New state:
+    content:
+    - type: text
+      value: ''
+    interaction:
+      answer_groups: []
+      customization_args:
+        placeholder:
+          value: ''
+        rows:
+          value: 1
+      default_outcome:
+        dest: END
+        feedback: []
+        param_changes: []
+      id: TextInput
+      triggers: []
+    param_changes: []
+states_schema_version: 4
+tags: []
+""")
+
+    _LATEST_YAML_CONTENT = YAML_CONTENT_V7
 
     def test_load_from_v1(self):
         """Test direct loading from a v1 yaml file."""
@@ -965,6 +1015,12 @@ tags: []
             'eid', 'A title', 'A category', self.YAML_CONTENT_V6)
         self.assertEqual(exploration.to_yaml(), self._LATEST_YAML_CONTENT)
 
+    def test_load_from_v7(self):
+        """Test direct loading from a v7 yaml file."""
+        exploration = exp_domain.Exploration.from_yaml(
+            'eid', 'A title', 'A category', self.YAML_CONTENT_V7)
+        self.assertEqual(exploration.to_yaml(), self._LATEST_YAML_CONTENT)
+
 
 class ConversionUnitTests(test_utils.GenericTestBase):
     """Test conversion methods."""
@@ -985,17 +1041,12 @@ class ConversionUnitTests(test_utils.GenericTestBase):
                 }],
                 'interaction': {
                     'customization_args': {},
-                    'handlers': [{
-                        'name': 'submit',
-                        'rule_specs': [{
-                            'definition': {
-                                'rule_type': 'default',
-                            },
-                            'dest': dest_name,
-                            'feedback': [],
-                            'param_changes': [],
-                        }],
-                    }],
+                    'answer_groups': [],
+                    'default_outcome': {
+                        'dest': dest_name,
+                        'feedback': [],
+                        'param_changes': [],
+                    },
                     'id': None,
                     'triggers': [],
                 },
@@ -1087,10 +1138,9 @@ class StateOperationsUnitTests(test_utils.GenericTestBase):
             exploration.rename_state('State 2', 'END')
 
         # Ensure the other states are connected to END
-        exploration.states['Renamed state'].interaction.handlers[
-            0].rule_specs[0].dest = 'State 2'
-        exploration.states['State 2'].interaction.handlers[
-            0].rule_specs[0].dest = 'END'
+        exploration.states[
+            'Renamed state'].interaction.default_outcome.dest = 'State 2'
+        exploration.states['State 2'].interaction.default_outcome.dest = 'END'
 
         # Ensure the other states have interactions
         exploration.states['Renamed state'].update_interaction_id('TextInput')

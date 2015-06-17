@@ -205,8 +205,7 @@ class EditorTest(BaseEditorControllerTest):
 
         def _get_unresolved_answers():
             return stats_domain.StateRuleAnswerLog.get(
-                '0', state_name, feconf.SUBMIT_HANDLER_NAME,
-                exp_domain.DEFAULT_RULESPEC_STR
+                '0', state_name, exp_domain.DEFAULT_RULESPEC_STR
             ).answers
 
         self.assertEqual(
@@ -252,19 +251,16 @@ class DownloadIntegrationTest(BaseEditorControllerTest):
 - type: text
   value: ''
 interaction:
+  answer_groups: []
   customization_args:
     placeholder:
       value: ''
     rows:
       value: 1
-  handlers:
-  - name: submit
-    rule_specs:
-    - definition:
-        rule_type: default
-      dest: State A
-      feedback: []
-      param_changes: []
+  default_outcome:
+    dest: State A
+    feedback: []
+    param_changes: []
   id: TextInput
   triggers: []
 param_changes: []
@@ -273,19 +269,16 @@ param_changes: []
 - type: text
   value: ''
 interaction:
+  answer_groups: []
   customization_args:
     placeholder:
       value: ''
     rows:
       value: 1
-  handlers:
-  - name: submit
-    rule_specs:
-    - definition:
-        rule_type: default
-      dest: State B
-      feedback: []
-      param_changes: []
+  default_outcome:
+    dest: State B
+    feedback: []
+    param_changes: []
   id: TextInput
   triggers: []
 param_changes: []
@@ -294,19 +287,16 @@ param_changes: []
 - type: text
   value: ''
 interaction:
+  answer_groups: []
   customization_args:
     placeholder:
       value: ''
     rows:
       value: 1
-  handlers:
-  - name: submit
-    rule_specs:
-    - definition:
-        rule_type: default
-      dest: %s
-      feedback: []
-      param_changes: []
+  default_outcome:
+    dest: %s
+    feedback: []
+    param_changes: []
   id: TextInput
   triggers: []
 param_changes: []
@@ -318,19 +308,16 @@ param_changes: []
 - type: text
   value: ''
 interaction:
+  answer_groups: []
   customization_args:
     placeholder:
       value: ''
     rows:
       value: 1
-  handlers:
-  - name: submit
-    rule_specs:
-    - definition:
-        rule_type: default
-      dest: State A
-      feedback: []
-      param_changes: []
+  default_outcome:
+    dest: State A
+    feedback: []
+    param_changes: []
   id: TextInput
   triggers: []
 param_changes: []
@@ -350,8 +337,9 @@ param_changes: []
             objective='')
 
         exploration = exp_services.get_exploration_by_id(EXP_ID)
-        exploration.states[exploration.init_state_name].interaction.handlers[
-            0].rule_specs[0].dest = exploration.init_state_name
+        init_state = exploration.states[exploration.init_state_name]
+        init_interaction = init_state.interaction
+        init_interaction.default_outcome.dest = exploration.init_state_name
         exploration.add_states(['State A', 'State 2', 'State 3'])
         exploration.states['State A'].update_interaction_id('TextInput')
         exploration.states['State 2'].update_interaction_id('TextInput')

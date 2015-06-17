@@ -294,23 +294,21 @@ class TestBase(unittest.TestCase):
             # Link first state to ending state (to maintain validity)
             init_state = exploration.states[exploration.init_state_name]
             init_interaction = init_state.interaction
-            init_interaction.handlers[0].rule_specs[0].dest = end_state_name
+            init_interaction.default_outcome.dest = end_state_name
 
         exp_services.save_new_exploration(owner_id, exploration)
         return exploration
 
     def submit_answer(
             self, exploration_id, state_name, answer,
-            params=None, handler_name=feconf.SUBMIT_HANDLER_NAME,
-            exploration_version=None):
+            params=None, exploration_version=None):
         """Submits an answer as an exploration player and returns the
         corresponding dict.
         """
         if params is None:
             params = {}
         return reader.submit_answer_in_tests(
-            exploration_id, state_name, answer, params, handler_name,
-            exploration_version)
+            exploration_id, state_name, answer, params, exploration_version)
 
     @contextlib.contextmanager
     def swap(self, obj, attr, newvalue):

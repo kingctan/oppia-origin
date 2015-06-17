@@ -31,9 +31,7 @@ class EndExploration(base.BaseInteraction):
     display_mode = base.DISPLAY_MODE_SUPPLEMENTAL
     is_terminal = True
     _dependency_ids = []
-    _handlers = [{
-        'name': 'submit', 'obj_type': 'Null'
-    }]
+    _handlers = [{'obj_type': 'Null'}]
 
     _customization_arg_specs = [{
         'name': 'recommendedExplorationIds',

@@ -60,8 +60,7 @@ ALLOWED_DISPLAY_MODES = [DISPLAY_MODE_SUPPLEMENTAL, DISPLAY_MODE_INLINE]
 class AnswerHandler(object):
     """Value object for an answer event stream (e.g. submit, click, drag)."""
 
-    def __init__(self, name, obj_type):
-        self.name = name
+    def __init__(self, obj_type):
         self.obj_type = obj_type
         self.obj_class = obj_services.Registry.get_object_class_by_type(
             obj_type)
@@ -72,7 +71,6 @@ class AnswerHandler(object):
 
     def to_dict(self):
         return {
-            'name': self.name,
             'obj_type': self.obj_type,
         }
 
@@ -129,15 +127,14 @@ class BaseInteraction(object):
     def dependency_ids(self):
         return copy.deepcopy(self._dependency_ids)
 
-    def normalize_answer(self, answer, handler_name):
+    def normalize_answer(self, answer):
         """Normalizes a learner's input to this interaction."""
-        for handler in self.handlers:
-            if handler.name == handler_name:
-                return handler.obj_class.normalize(answer)
+        if self.handlers:
+            return self.handlers[0].obj_class.normalize(answer)
 
         raise Exception(
-            'Could not find handler in interaction %s with name %s' %
-            (self.name, handler_name))
+            'Could not find submit handler in interaction %s' %
+            (self.name))
 
     def validate_customization_arg_values(self, customization_args):
         """Validates customization arg values. The input is a dict whose
@@ -217,24 +214,22 @@ class BaseInteraction(object):
 
         return result
 
-    def get_handler_by_name(self, handler_name):
+    def get_submit_handler(self):
         """Get the handler for an interaction, given the handler's name."""
-        try:
-            return next(h for h in self.handlers if h.name == handler_name)
-        except StopIteration:
-            raise Exception(
-                'Could not find handler with name %s' % handler_name)
+        if self.handlers:
+            return self.handlers[0]
+        raise Exception('Could not find submit handler.')
 
-    def get_rule_by_name(self, handler_name, rule_name):
+    def get_rule_by_name(self, rule_name):
         """Gets a rule, given its name and ancestors."""
-        handler = self.get_handler_by_name(handler_name)
+        handler = self.get_submit_handler()
         try:
             return next(
                 r for r in handler.rules if r.__name__ == rule_name)
         except StopIteration:
             raise Exception(
-                'Could not find rule with name %s for handler %s'
-                % (rule_name, handler_name))
+                'Could not find rule with name %s for submit handler'
+                % (rule_name))
 
     def get_stats_log_html(self, state_customization_args, answer):
         """Gets the HTML for recording a learner's response in the stats log.

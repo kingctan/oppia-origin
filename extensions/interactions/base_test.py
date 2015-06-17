@@ -46,16 +46,14 @@ class AnswerHandlerUnitTests(test_utils.GenericTestBase):
 
     def test_rules_property(self):
         """Test that answer_handler.rules behaves as expected."""
-        answer_handler = base.AnswerHandler('submit', 'Null')
-        self.assertEqual(answer_handler.name, 'submit')
+        answer_handler = base.AnswerHandler('Null')
         self.assertEqual(answer_handler.rules, [])
 
-        answer_handler = base.AnswerHandler(
-            'submit', 'NonnegativeInt')
+        answer_handler = base.AnswerHandler('NonnegativeInt')
         self.assertEqual(len(answer_handler.rules), 1)
 
         with self.assertRaisesRegexp(Exception, 'not a valid object class'):
-            base.AnswerHandler('submit', 'FakeObjType')
+            base.AnswerHandler('FakeObjType')
 
 
 class InteractionUnitTests(test_utils.GenericTestBase):
@@ -271,18 +269,11 @@ class InteractionUnitTests(test_utils.GenericTestBase):
                 msg='Interaction %s has no handlers defined' % interaction_id)
 
             for handler in interaction._handlers:
-                HANDLER_KEYS = ['name', 'obj_type']
+                HANDLER_KEYS = ['obj_type']
                 self.assertItemsEqual(HANDLER_KEYS, handler.keys())
-                self.assertTrue(isinstance(handler['name'], basestring))
                 # Check that the obj_type corresponds to a valid object class.
                 obj_services.Registry.get_object_class_by_type(
                     handler['obj_type'])
-
-            # Check that all handler names are unique.
-            names = [handler.name for handler in interaction.handlers]
-            self.assertEqual(
-                len(set(names)), len(names),
-                'Interaction %s has duplicate handler names' % interaction_id)
 
             self._validate_customization_arg_specs(
                 interaction._customization_arg_specs)
