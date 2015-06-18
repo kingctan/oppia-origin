@@ -22,6 +22,11 @@
 
 oppia.directive('oppiaGadgetScoreBar', [
   'oppiaHtmlEscaper', 'learnerParamsService', function(oppiaHtmlEscaper, learnerParamsService) {
+
+    // Gadget height and width in pixels.
+    var _HEIGHT = 100;
+    var _WIDTH = 250;
+
     return {
       restrict: 'E',
       templateUrl: 'gadget/ScoreBar',
@@ -30,6 +35,27 @@ oppia.directive('oppiaGadgetScoreBar', [
         $scope.maxValue = oppiaHtmlEscaper.escapedJsonToObj($attrs.maxValueWithValue);
         $scope.scoreBarTitle = oppiaHtmlEscaper.escapedJsonToObj($attrs.titleWithValue);
         $scope.scoreBarParamName = oppiaHtmlEscaper.escapedJsonToObj($attrs.paramNameWithValue);
+
+        // TODO(anuzis): Update return value types based on the
+        // recommendations we receive in review.
+        $scope.validate = function() {
+          var params = learnerParamsService.getAllParams()
+          if ($scope.scoreBarParamName in params) {
+            return null;
+          } else {
+            var validationError = $scope.scoreBarParamName ' is not yet ' +
+            'created as a parameter. Please create the parameter first.';
+            return validationError;
+          }
+        }
+
+        $scope.getHeight = function() {
+          return _HEIGHT;
+        }
+
+        $scope.getWidth = function () {
+          return _WIDTH;
+        }
 
         $scope.getScoreValue = function() {
           return learnerParamsService.getValue($scope.scoreBarParamName);

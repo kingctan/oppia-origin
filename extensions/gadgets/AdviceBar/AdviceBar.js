@@ -22,12 +22,62 @@
 
 oppia.directive('oppiaGadgetAdviceBar', [
   'oppiaHtmlEscaper', function(oppiaHtmlEscaper) {
+
+    // Maximum and minimum number of tips that an AdviceBar can hold.
+    var _MAX_TIP_COUNT = 3;
+    var _MIN_TIP_COUNT = 1;
+
+    // Constants for calculation of height and width.
+    // TODO(anuzis): Update these values to reflect actual size
+    // as UX polish is finalized.
+    var _WIDTH = 100;
+    var _TITLE_HEIGHT = 50;
+    var _HEIGHT_PER_ADVICE_RESOURCE = 100;
+
     return {
       restrict: 'E',
       templateUrl: 'gadget/AdviceBar',
       controller: ['$scope', '$attrs', '$modal', function ($scope, $attrs, $modal) {
         $scope.adviceBarTitle = oppiaHtmlEscaper.escapedJsonToObj($attrs.titleWithValue);
         $scope.adviceBarResources = oppiaHtmlEscaper.escapedJsonToObj($attrs.adviceObjectsWithValue);
+
+        // Validates that AdviceBar uses an acceptable configuration.
+        // @sll: How do you suggest gadget-specific validation gets surfaced
+        // on the front-end? Rather than giving gadget developers the ability
+        // to flag errors directly mid-validation, is it better if we ask them
+        // to return a validation string that the gadgetValidator service
+        // raises to content authors?
+        $scope.validate = function() {
+          var tip_count = $scope.adviceBarResources.length;
+          if (tip_count > _MAX_TIP_COUNT) {
+            var validationError = 'AdviceBars are limited to ' + _MAX_TIP_COUNT + ' tips.';
+            return validationError;
+          } else if (tip_count < _MIN_TIP_COUNT) {
+            var validationError = 'AdviceBars require at least ' + _MIN_TIP_COUNT + ' tips.';
+            return validationError;
+          } else {
+            return null;
+          }
+        }
+
+        $scope.getHeight = function() {
+          var height = 0;
+          var tip_count = $scope.adviceBarResources.length;
+
+          // If the AdviceBar has a title to display, factor it into
+          // the gadget's height.
+          if ($scope.adviceBarTitle != '') {
+            height = height + _TITLE_HEIGHT;
+          }
+          height += _HEIGHT_PER_ADVICE_RESOURCE * tip_count;
+          return height;
+        }
+
+        $scope.getWidth = function () {
+          return _WIDTH;
+        }
+
+
 
         $scope.overlayAdviceModal = function(adviceResourceIndex) {
           $modal.open({
