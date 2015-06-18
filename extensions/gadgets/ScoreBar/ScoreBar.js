@@ -43,7 +43,7 @@ oppia.directive('oppiaGadgetScoreBar', [
           if ($scope.scoreBarParamName in params) {
             return null;
           } else {
-            var validationError = $scope.scoreBarParamName ' is not yet ' +
+            var validationError = $scope.scoreBarParamName + ' is not yet ' +
             'created as a parameter. Please create the parameter first.';
             return validationError;
           }
