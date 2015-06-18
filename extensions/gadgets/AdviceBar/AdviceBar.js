@@ -50,10 +50,18 @@ oppia.directive('oppiaGadgetAdviceBar', [
         $scope.validate = function() {
           var tip_count = $scope.adviceBarResources.length;
           if (tip_count > _MAX_TIP_COUNT) {
-            var validationError = 'AdviceBars are limited to ' + _MAX_TIP_COUNT + ' tips.';
+            // Grammar string for plural tip count.
+            var plural_S = '';
+            if (_MAX_TIP_COUNT != 1) {plural_S = 's';}
+            var validationError = 'AdviceBars are limited to ' +
+              _MAX_TIP_COUNT + ' tip' + plural_S + '.';
             return validationError;
           } else if (tip_count < _MIN_TIP_COUNT) {
-            var validationError = 'AdviceBars require at least ' + _MIN_TIP_COUNT + ' tips.';
+            // Grammar string for plural tip count.
+            var plural_S = '';
+            if (_MIN_TIP_COUNT != 1) {plural_S = 's';}
+            var validationError = 'AdviceBars need at least ' +
+              _MIN_TIP_COUNT + ' tip' + plural_S + '.';
             return validationError;
           } else {
             return null;
