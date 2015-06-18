@@ -972,7 +972,11 @@ oppia.factory('explorationGadgetsService', [
     }
     return panelGadgets;
   };
-
+  /**
+  * Returns a JS object whose keys are state names, and whose corresponding
+  * values are lists of gadget instances representing the gadgets visible in
+  * that state for the given panel.
+  */
   var _getGadgetsVisibilityMap = function(panelName) {
     var gadgetInstanceList = _getAllGadgetsInstancesForPanel(panelName);
     var visibilityMap = {};
@@ -1071,12 +1075,14 @@ oppia.factory('explorationGadgetsService', [
       $log.info('Initializing ' + Object.keys(_panels).length + ' panel(s).');
       $rootScope.$broadcast('gadgetsChangedOrInitialized');
     },
+    //Confirms if a panel can accept a new gadget considering it's capacity
+    //and the gadget's size requirements given its customization arguments.
     canAddGadgetTo: function(panelName, gadgetData) {
       var visibilityMap = _getGadgetsVisibilityMap(panelName);
       var backendDictGadgetData = _changeToBackendCompatibleDict(gadgetData);
       var canAdd = _isNewGadgetNameValid(backendDictGadgetData.gadget_name, true);
       if(canAdd) {
-        canAdd = gadgetValidationService.gadgetValidatorcanAddGadget(
+        canAdd = gadgetValidationService.canAddGadget(
           panelName, backendDictGadgetData, visibilityMap);
       }
 

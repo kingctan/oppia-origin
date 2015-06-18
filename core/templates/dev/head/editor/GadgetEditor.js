@@ -63,7 +63,7 @@ oppia.controller('GadgetEditor', [
     };
 
     $scope.saveNewGadget = function(gadgetData) {
-      explorationGadgetsService.addGadget(gadgetData, gadgetData.position);
+      explorationGadgetsService.addGadget(gadgetData, gadgetData.panelName);
     };
 
     /**
@@ -118,14 +118,15 @@ oppia.controller('GadgetEditor', [
 
           $scope.editingGadget = false;
           //Initialising gadgetDict
+          //TODO(sll/anuzis/vjoisar): Decide to change all keys to be compatible
+          //    with the backend to avoid key conversions.
           $scope.gadgetData = {
             gadgetId: '',
             gadgetName: '',
-            position: 'left',
+            panelName: 'left',
             customizationArgs: {},
             visibleInStates: []
           };
-
           if (gadgetEditData) {
             $scope.editingGadget = true;
             $scope.gadgetData = {
@@ -167,7 +168,7 @@ oppia.controller('GadgetEditor', [
             $scope.gadgetData = {
               gadgetId: '',
               gadgetName: '',
-              position: '',
+              panelName: '',
               customizationArgs: {},
               visibleInStates: []
             };
@@ -178,9 +179,7 @@ oppia.controller('GadgetEditor', [
           };
 
           $scope.addGadget = function() {
-            //TODO(vjoisar):Add Validation if any field is empty to warn user
-            //  before saving or closing the dialog;
-            var panelName = $scope.gadgetData.position;
+            var panelName = $scope.gadgetData.panelName;
             var gadgetData = $scope.gadgetData;
               var returnObj = {
                 mode: "addingGadget",

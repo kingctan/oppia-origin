@@ -1983,7 +1983,8 @@ div#ng-curtain {
   color: #636363;
   position: absolute;
   top: 80%;
-  display: none;/* to be changed after finalised specs */
+  /*TODO(vjoisar):to be changed after finalised specs */
+  display: none;
 }
 .oppia-gadget-content{
   background: #fff;

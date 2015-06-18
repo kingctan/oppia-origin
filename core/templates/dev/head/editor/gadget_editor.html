@@ -21,13 +21,13 @@
           <button class="btn btn-default btn-sm" ng-click="renameGadget(newGadgetName)">Done</button>
         </span>
         <div class='oppia-gadget-preview-container' ng-click="openCustomizeGadgetModal(gadgets[gadgetName])">
-          <oppia-gadget-preview  
-            gadget-id="gadgets[gadgetName].gadget_id" 
+          <oppia-gadget-preview
+            gadget-id="gadgets[gadgetName].gadget_id"
             gadget-customization-args="gadgets[gadgetName].customization_args"
             show-in-states="gadgets[gadgetName].visible_in_states"
             gadget-name="gadgetName" style="pointer-events: none;">
           </oppia-gadget-preview>
-          <span title="Edit Gadget Content" 
+          <span title="Edit Gadget Content"
                 class="glyphicon glyphicon-edit oppia-gadget-edit-icon ng-scope" >
         </span>
         </div>
@@ -47,7 +47,7 @@
   </div>
   <div class="modal-body">
     <div ng-if="!gadgetData.gadgetId" ng-cloak>
-      <span class="oppia-gadget-tile" 
+      <span class="oppia-gadget-tile"
             ng-repeat="(key, gadget) in ALLOWED_GADGETS"
             ng-click="onChangeGadgetId(key)">
         <[key]>
@@ -61,12 +61,12 @@
       <div ng-show="!editingGadget" class="gadget-layout-panel">
         <label class="oppia-gadget-customization-label">Layout</label>
         <select ng-options="panelname for panelname in availablePanels"
-                 ng-model="gadgetData.position" style="text-transform:capitalize;">
+                 ng-model="gadgetData.panelName" style="text-transform:capitalize;">
         </select>
       </div>
-      <div class="gadget-state-visibility-panel"> 
+      <div class="gadget-state-visibility-panel">
         <h2 class="oppia-gadget-customization-label">Visible in states</h2>
-        <label class="oppia-gadget-customization-label" 
+        <label class="oppia-gadget-customization-label"
                ng-repeat="state in explorationStates" >
           <input type="checkbox" ng-click="manageVisibilityInStates(state)"
                  ng-checked="gadgetData.visibleInStates.indexOf(state) > -1"
@@ -88,13 +88,13 @@
           </div>
         </div>
       </form>
-    </div>    
-  </div> 
+    </div>
+  </div>
 
 
   <div class="modal-footer">
-    <button ng-show="!editingGadget" class="btn btn-default" style="float: left;" 
-            ng-click="returnToGadgetSelector()" 
+    <button ng-show="!editingGadget" class="btn btn-default" style="float: left;"
+            ng-click="returnToGadgetSelector()"
             ng-if="gadgetData.gadgetId">
         Back
     </button>

@@ -26,10 +26,14 @@ oppia.factory('gadgetValidationService', [
   var AXIS_HORIZONTAL = 'horizontal';
   var AXIS_VERTICAL = 'vertical';
   var _PANEL_SPECS = GLOBALS.SKIN_PANELS_PROPERTIES;
+  var _MAX_GADGET_NAME_LENGTH = 50;
 
   /**
-  *
-  *
+  * Validates if the gadget/s fit the panel size accross all states.
+  * @param {string} panelName, The panel name for the panel being validated.
+  * @param {object} visibilityMap, object with state as key and list of visible
+  *     gadget data as its value for a panel.
+  * @return {bool} true if everything is ok, false otherwise
   */
   gadgetValidator.validatePanel = function(panelName, visibilityMap) {
     var currentPanelSpec = _PANEL_SPECS[panelName];
@@ -81,9 +85,7 @@ oppia.factory('gadgetValidationService', [
       }
     }
     return true;
-
   };
-
 
   /**
    * Checks whether gadget name is valid, and displays a warning message
@@ -97,7 +99,7 @@ oppia.factory('gadgetValidationService', [
       return false;
     }
 
-    if (input.length > 50) {
+    if (input.length > _MAX_GADGET_NAME_LENGTH) {
       if (showWarnings) {
         warningsData.addWarning(
           'State names should be at most 50 characters long.');
@@ -114,11 +116,11 @@ oppia.factory('gadgetValidationService', [
    * @param {string} panelName The panel where the gadget is added.
    * @param {object} gadgetData The gadgetData for the gadget being added.
    * @param {object} visibilityMap The gadget dict list for gadgets
-   *                 visible in this panel accross all states.
+   *                 visible in this panel across all states.
    * @param {boolean} showWarnings Whether to show warnings in the butterbar.
-   * @return {boolean} True if the it can be added, false otherwise.
+   * @return {boolean} True if the gadget can be added, false otherwise.
    */
-  gadgetValidator.gadgetValidatorcanAddGadget = function(panelName, gadgetData,
+  gadgetValidator.canAddGadget = function(panelName, gadgetData,
                                          visibilityMap, showWarnings) {
     var currentPanelSpec = _PANEL_SPECS[panelName];
     for(var i = 0; i < gadgetData.visible_in_states.length; i++) {
@@ -126,10 +128,11 @@ oppia.factory('gadgetValidationService', [
       var gadgetInstances = visibilityMap[stateName] || [];
       //Adding 1 to length to see if new gadget can be added or not.
       //Doesn't check for width or height for now.
+      //TODO(vjoisar):Make it check for gadget's width and height.
       if (gadgetInstances.length + 1 > currentPanelSpec.max_gadgets) {
-        var warningText =  panelName + ' panel expects at most ' +
-          currentPanelSpec.max_gadgets +  ', but ' + gadgetInstances.length +
-          ' already visible in state ' + stateName + '.'
+        var warningText =  "The " + panelName + " gadget panel can only have " +
+          currentPanelSpec.max_gadgets + " gadget" +
+          (currentPanelSpec.max_gadgets>1?'s':'') + " visible at a time.";
         warningsData.addWarning(warningText);
         return false;
       }
