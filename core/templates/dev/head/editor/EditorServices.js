@@ -926,10 +926,10 @@ oppia.factory('stateCustomizationArgsService', [
 oppia.factory('explorationGadgetsService', [
     '$log', '$modal', '$filter', '$location', '$rootScope',
     'changeListService', 'editorContextService', 'warningsData',
-    'validatorsService',
+    'gadgetValidationService',
     function($log, $modal, $filter, $location, $rootScope,
              changeListService, editorContextService, warningsData,
-             validatorsService) {
+             gadgetValidationService) {
   // _gadgets is a JS object with gadget_instance.name strings as keys
   // and each gadget_instance's data as values.
   var _gadgets = null;
@@ -963,6 +963,34 @@ oppia.factory('explorationGadgetsService', [
     }
   };
 
+
+  var _getAllGadgetsInstancesForPanel = function(panelName) {
+    var panelGadgets = [];
+    var gadgetsInCurrentPanel = _panels[panelName];
+    for (var i = 0; i < gadgetsInCurrentPanel.length; i++) {
+      panelGadgets.push(_gadgets[gadgetsInCurrentPanel[i]]);
+    }
+    return panelGadgets;
+  };
+
+  var _getGadgetsVisibilityMap = function(panelName) {
+    var gadgetInstanceList = _getAllGadgetsInstancesForPanel(panelName);
+    var visibilityMap = {};
+    for (var i = 0; i < gadgetInstanceList.length; i++) {
+      var gadgetInstance = gadgetInstanceList[i];
+      for(var j = 0; j < gadgetInstance.visible_in_states.length; j++) {
+        var stateName = gadgetInstance.visible_in_states[j]
+        if(visibilityMap[stateName]) {
+          visibilityMap[stateName].push(gadgetInstance);
+        }
+        else {
+          visibilityMap[stateName] = [gadgetInstance];
+        }
+      }
+    }
+    return visibilityMap;
+  };
+
   var _isNewGadgetNameValid = function(newGadgetName, showWarnings) {
     if (_gadgets.hasOwnProperty(newGadgetName)) {
       if (showWarnings) {
@@ -970,12 +998,11 @@ oppia.factory('explorationGadgetsService', [
       }
       return false;
     }
-    return true;
     return (
       // TODO(vjoisar): implement validatorsService.isValidGadgetName
-      validatorsService.isValidGadgetName(newGadgetName, showWarnings));
+      gadgetValidationService.isValidGadgetName(newGadgetName, showWarnings));
   };
-  
+
   var _formatGadgetsData = function(panelsContents) {
     gadgetsData = {};
     for (var panelName in panelsContents) {
@@ -986,7 +1013,7 @@ oppia.factory('explorationGadgetsService', [
     }
     return gadgetsData;
   };
-  
+
   var _formatPanelsData = function(panelsContents) {
     panelsData = {};
     for (var panelName in panelsContents) {
@@ -1000,19 +1027,23 @@ oppia.factory('explorationGadgetsService', [
     }
     return panelsData;
   };
-  
+
   var _validate = function() {
     // Validates configuration and fit of all gadgets and panels.
+    var isValid = false;
     for (var panelName in _panels) {
-      this._validatePanel(panelName);
+      isValid = _validatePanel(panelName);
     }
+    return isValid;
   };
-  
+
   var _validatePanel = function(panelName) {
     // Validates fit and internal validity of all gadgets in a panel.
     // Returns boolean.
     // TODO(vjoisar): Implement.
-    return true;
+
+    var visibilityMap = _getGadgetsVisibilityMap(panelName);
+    return gadgetValidationService.validatePanel(panelName, visibilityMap);
   };
 
   var _changeToBackendCompatibleDict = function(gadgetData) {
@@ -1031,10 +1062,25 @@ oppia.factory('explorationGadgetsService', [
       var panelsContents = skin_customizations_data.panels_contents;
       _gadgets = _formatGadgetsData(panelsContents);
       _panels = _formatPanelsData(panelsContents);
-
+      var isValid = _validate();
+      if(!isValid) {
+        //warningsData.addWarning('Panel validation failed');
+        return;
+      }
       $log.info('Initializing ' + Object.keys(_gadgets).length + ' gadget(s).');
       $log.info('Initializing ' + Object.keys(_panels).length + ' panel(s).');
       $rootScope.$broadcast('gadgetsChangedOrInitialized');
+    },
+    canAddGadgetTo: function(panelName, gadgetData) {
+      var visibilityMap = _getGadgetsVisibilityMap(panelName);
+      var backendDictGadgetData = _changeToBackendCompatibleDict(gadgetData);
+      var canAdd = _isNewGadgetNameValid(backendDictGadgetData.gadget_name, true);
+      if(canAdd) {
+        canAdd = gadgetValidationService.gadgetValidatorcanAddGadget(
+          panelName, backendDictGadgetData, visibilityMap);
+      }
+
+      return canAdd;
     },
     getUniqueGadgetName: function(gadgetId) {
       return _generateUniqueGadgetName(gadgetId);
@@ -1051,7 +1097,7 @@ oppia.factory('explorationGadgetsService', [
     /**
      * Updates a gadget's visibility and/or customization args using
      * the new data provided.
-     * 
+     *
      * This method does not update a gadget's name or panel position.
      * Use this method in conjunction with renameGadget and
      * moveGadgetBetweenPanels if those aspects need to be changed as well.
@@ -1102,13 +1148,13 @@ oppia.factory('explorationGadgetsService', [
 
       /*
         To avoid mismatched dict keys in _gadgets
-      */  
+      */
       backendCompatibleGadgetData = _changeToBackendCompatibleDict(gadgetData);
 
       if(!!_gadgets.hasOwnProperty(backendCompatibleGadgetData.gadget_name)){
         $log.info('Gadget with this name already exists.');
         return;
-      }    
+      }
       _gadgets[backendCompatibleGadgetData.gadget_name] = backendCompatibleGadgetData;
       _panels[panelName].push(backendCompatibleGadgetData.gadget_name);
       $rootScope.$broadcast('gadgetsChangedOrInitialized');

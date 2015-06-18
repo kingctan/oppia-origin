@@ -180,11 +180,15 @@ oppia.controller('GadgetEditor', [
           $scope.addGadget = function() {
             //TODO(vjoisar):Add Validation if any field is empty to warn user
             //  before saving or closing the dialog;
-            var returnObj = {
-              mode: "addingGadget",
-              data: $scope.gadgetData
+            var panelName = $scope.gadgetData.position;
+            var gadgetData = $scope.gadgetData;
+              var returnObj = {
+                mode: "addingGadget",
+                data: gadgetData
+              }
+            if (explorationGadgetsService.canAddGadgetTo(panelName, gadgetData)) {
+              $modalInstance.close(returnObj);
             }
-            $modalInstance.close(returnObj);
           };
 
           $scope.updateGadget = function() {

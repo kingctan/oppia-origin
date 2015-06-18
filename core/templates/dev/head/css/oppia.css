@@ -1943,7 +1943,7 @@ div#ng-curtain {
   background: #636363;
   position: fixed;
   top: 100px;
-  width: 140px; 
+  width: 140px;
   color: #fff;
 }
 
@@ -1978,14 +1978,15 @@ div#ng-curtain {
   top: 4px;
 }
 
-.oppia-gadget-edit-icon {  
+.oppia-gadget-edit-icon {
   right: 0;
   color: #636363;
   position: absolute;
   top: 80%;
+  display: none;/* to be changed after finalised specs */
 }
 .oppia-gadget-content{
-  background: #fff;  
+  background: #fff;
 }
 
 .oppia-gadget-name {
